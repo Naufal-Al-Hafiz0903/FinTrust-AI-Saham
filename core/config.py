@@ -2,15 +2,15 @@
 StockMind AI — Multi-Agent Stock Analysis System
 Konfigurasi global dan konstanta
 """
+import os
+from dotenv import load_dotenv
 
-OLLAMA_HOST = "http://172.16.0.24:11434"
-OLLAMA_MODEL = "qwen2.5:7b"
+# Load variabel dari file .env
+load_dotenv()
 
-OLLAMA_OPTIONS = {
-    "temperature": 0.2,
-    "num_predict": 1024,
-    "top_p": 0.9,
-}
+# Konfigurasi LLM menggunakan Groq
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 # Bobot tiap agent dalam keputusan final (total = 1.0)
 AGENT_WEIGHTS = {

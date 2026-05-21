@@ -5,6 +5,7 @@ import YahooFinance from "yahoo-finance2";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { exec } from "child_process";
 
 dotenv.config();
 
@@ -43,12 +44,17 @@ function resolveSymbol(ticker = "", market = "idx") {
   if (!raw) throw new Error("Ticker kosong");
   if (market === "idx") return `${raw.replace(".JK", "")}.JK`;
   if (market === "ipo") return raw.replace(".JK", "");
+  if (market === "crypto") {
+    return raw.includes("-") ? raw : `${raw}-USD`;
+  }
   return raw.replace(".JK", "");
 }
 
 function inferMarketFromSymbol(symbol = "", requestedMarket = "idx") {
   if (requestedMarket === "global") return "global";
   if (requestedMarket === "ipo") return "ipo";
+  if (requestedMarket === "crypto") return "crypto";
+  if (symbol.includes("-USD") || symbol.includes("-")) return "crypto";
   return symbol.endsWith(".JK") ? "idx" : "global";
 }
 
@@ -131,7 +137,7 @@ async function getStockData(ticker, market = "idx") {
       fiftyTwoWeekHigh: q.fiftyTwoWeekHigh ?? null,
       fiftyTwoWeekLow: q.fiftyTwoWeekLow ?? null,
       currency,
-      exchange: q.fullExchangeName || q.exchange || (resolvedMarket === "idx" ? "IDX" : "Global"),
+      exchange: q.fullExchangeName || q.exchange || (resolvedMarket === "idx" ? "IDX" : (resolvedMarket === "crypto" ? "Crypto Market" : "Global")),
       source: "Yahoo Finance"
     };
   });
@@ -267,6 +273,57 @@ ${prompt}
     console.error("Groq analyze error:", safe.message);
     res.status(safe.status).json({ error: safe.message });
   }
+});
+
+//PROPHET
+app.get("/api/predict/:ticker", (req, res) => {
+  const market = req.query.market || "idx";
+  const ticker = resolveSymbol(req.params.ticker, market);
+  
+  exec(`python predict.py ${ticker}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error("Prophet Error:", stderr);
+      return res.status(500).json({ error: "Gagal menjalankan prediksi AI." });
+    }
+    try {
+      const result = JSON.parse(stdout);
+      res.json(result);
+    } catch (e) {
+      console.error("Prophet Parse Error:", e, stdout);
+      res.status(500).json({ error: "Gagal memproses hasil prediksi Prophet." });
+    }
+  });
+});
+// MULTI-MODEL PREDICTIONS (XGBoost, Random Forest, dll)
+app.get("/api/predict/:model/:ticker", (req, res) => {
+  const { model, ticker: rawTicker } = req.params;
+  const market = req.query.market || "idx";
+  const ticker = resolveSymbol(rawTicker, market);
+  
+  const scripts = {
+    "xgboost": "predict_xgb.py",
+    "randomforest": "predict_rf.py"
+  };
+
+  const targetScript = scripts[model.toLowerCase()];
+
+  if (!targetScript) {
+    return res.status(400).json({ error: `Model '${model}' belum didukung.` });
+  }
+
+  exec(`python ${targetScript} ${ticker}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`[${model.toUpperCase()}] Error:`, stderr);
+      return res.status(500).json({ error: `Gagal menjalankan prediksi model ${model}.` });
+    }
+    try {
+      const result = JSON.parse(stdout);
+      res.json(result);
+    } catch (e) {
+      console.error(`[${model.toUpperCase()}] Parse Error:`, e, stdout);
+      res.status(500).json({ error: `Gagal memproses hasil prediksi dari model ${model}.` });
+    }
+  });
 });
 
 const PORT = process.env.PORT || 3000;

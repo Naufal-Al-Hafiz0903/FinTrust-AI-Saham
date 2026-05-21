@@ -9,13 +9,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from core.base_agent import BaseAgent, AgentResult, AgentMessage
 
 
-SYSTEM_PROMPT = """Kamu adalah Technical Analysis Agent untuk saham Indonesia dan saham luar negeri.
+SYSTEM_PROMPT = """Kamu adalah Technical Analysis Agent untuk Saham (Indonesia & Global) dan Cryptocurrency.
 
 TUGAS:
-Analisa kondisi teknikal saham berdasarkan indikator-indikator teknis yang umum digunakan.
+Analisa kondisi teknikal aset (saham/kripto) berdasarkan indikator-indikator teknis yang umum digunakan.
+Pastikan kamu memperhatikan volatilitas tinggi jika aset tersebut adalah Cryptocurrency.
 
 EVALUASI:
-- Tren: Apakah saham dalam uptrend / downtrend / sideways?
+- Tren: Apakah aset dalam uptrend / downtrend / sideways?
 - RSI (Relative Strength Index): Overbought (>70) / Oversold (<30) / Normal
 - MACD: Bullish crossover / Bearish crossover / Divergence
 - Moving Average: Posisi harga terhadap MA20, MA50, MA200 (Golden Cross / Death Cross)
@@ -65,6 +66,7 @@ class TechnicalAgent(BaseAgent):
     def run(self, ticker: str, context: dict) -> AgentResult:
         mode = context.get("mode", "listed")
         is_ipo = mode == "ipo"
+        is_crypto = mode == "crypto"
 
         self.send_message(AgentMessage(
             sender="OrchestratorAgent",
@@ -72,13 +74,20 @@ class TechnicalAgent(BaseAgent):
             content={"ticker": ticker, "task": "technical_analysis", "mode": mode},
             msg_type="task"
         ))
-
-        user_msg = f"""Lakukan analisa teknikal untuk saham: {ticker}
-Tipe: {'IPO / Pre-IPO' if is_ipo else 'Saham Listed / Global'}
+        if is_crypto:
+            asset_type = "Cryptocurrency"
+        elif is_ipo:
+            asset_type = "IPO / Pre-IPO"
+        else:
+            asset_type = "Saham Listed / Global"
+        
+        user_msg = f"""Lakukan analisa teknikal untuk aset: {ticker}
+Tipe: {asset_type}
 
 Berikan analisa berdasarkan kondisi teknikal yang kamu ketahui.
 Sebutkan level support, resistance, dan zona entry yang konkret.
-Jika ini IPO, analisa potensi pergerakan harga pasca listing."""
+Jika ini IPO, analisa potensi pergerakan harga pasca listing.
+Jika ini Kripto, perhatikan level psikologis dan volatilitas harian."""
 
         try:
             raw = self._call_llm(SYSTEM_PROMPT, user_msg)
