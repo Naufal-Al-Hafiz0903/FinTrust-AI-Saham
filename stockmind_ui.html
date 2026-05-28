@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fintrust AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/stockmind_ui.css">
+  <style>
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0b0f1a;
+      --bg2:       #111827;
+      --bg3:       #1a2235;
+      --surface:   #1e2a3e;
+      --surface2:  #243048;
+      --border:    rgba(255,255,255,0.07);
+      --border2:   rgba(255,255,255,0.13);
+      --text:      #e8edf5;
+      --text2:     #8b97ac;
+      --text3:     #4e5c72;
+      --accent:    #3b82f6;
+      --accent2:   #60a5fa;
+      --accent-bg: rgba(59,130,246,0.12);
+      --green:     #22c55e;
+      --green-bg:  rgba(34,197,94,0.1);
+      --red:       #f87171;
+      --red-bg:    rgba(248,113,113,0.1);
+      --amber:     #fbbf24;
+      --amber-bg:  rgba(251,191,36,0.1);
+      --radius:    10px;
+      --radius-lg: 14px;
+      --sidebar-w: 230px;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* ─── App Shell ─── */
+    .app-shell {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      padding: 24px 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .brand-logo svg {
+      width: 22px; height: 22px;
+      stroke: #fff; stroke-width: 2.2;
+      fill: none; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 10px;
+      overflow-y: auto;
+    }
+    .nav-group { margin-bottom: 24px; }
+    .nav-group-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13.5px;
+      color: var(--text2);
+      transition: all 0.15s;
+      margin-bottom: 1px;
+      position: relative;
+      text-decoration: none;
+    }
+    .nav-item i { font-size: 17px; flex-shrink: 0; }
+    .nav-item:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+    .nav-item.active {
+      background: var(--accent-bg);
+      color: var(--accent2);
+      font-weight: 500;
+    }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 3px; height: 60%;
+      background: var(--accent);
+      border-radius: 0 3px 3px 0;
+    }
+    .nav-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-family: var(--mono);
+      background: var(--accent);
+      color: #fff;
+      border-radius: 99px;
+      padding: 1px 7px;
+      font-weight: 500;
+    }
+
+    .sidebar-footer {
+      padding: 14px 10px;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar-footer .nav-item {
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    /* ─── Main Area ─── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .topbar-crumb {
+      font-size: 12px;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .fx-tag {
+      font-size: 11.5px;
+      font-family: var(--mono);
+      color: var(--accent2);
+      background: var(--accent-bg);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 99px;
+      padding: 4px 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .topbar-btn {
+      width: 34px; height: 34px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--text2);
+      transition: all 0.15s;
+    }
+    .topbar-btn:hover { background: var(--surface2); color: var(--text); }
+    .topbar-btn i { font-size: 17px; }
+
+    /* ─── Content ─── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .content::-webkit-scrollbar { width: 4px; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    /* ─── Market Pills ─── */
+    .market-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      padding: 6px 16px;
+      border-radius: 99px;
+      font-size: 12.5px;
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      color: var(--text2);
+      cursor: pointer;
+      font-weight: 400;
+      transition: all 0.15s;
+    }
+    .pill:hover { border-color: var(--accent); color: var(--accent2); }
+    .pill.on, .pill.active {
+      background: var(--accent-bg);
+      border-color: rgba(59,130,246,0.35);
+      color: var(--accent2);
+      font-weight: 500;
+    }
+
+    /* ─── Cards ─── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .card-title i { font-size: 16px; color: var(--accent); }
+
+    /* ─── Input Grid ─── */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text3);
+      letter-spacing: 0.02em;
+    }
+    .field input,
+    .field select,
+    input.ticker {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13.5px;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+    }
+    .field input:focus,
+    .field select:focus,
+    input.ticker:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    }
+    .field input::placeholder { color: var(--text3); }
+    .field select { appearance: none; cursor: pointer; }
+    .field select option { background: var(--bg2); }
+
+    /* ─── Quick Picks ─── */
+    .quick, .quick-picks {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .qpick {
+      font-size: 12px;
+      font-family: var(--mono);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      color: var(--text2);
+      background: var(--surface);
+      transition: all 0.15s;
+    }
+    .qpick:hover {
+      border-color: var(--accent);
+      color: var(--accent2);
+      background: var(--accent-bg);
+    }
+
+    /* ─── Run Button ─── */
+    .btn, .run-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 6px;
+    }
+    .btn:hover, .run-btn:hover { background: #2563eb; }
+    .btn:active, .run-btn:active { transform: scale(0.99); }
+    .btn i, .run-btn i { font-size: 16px; }
+
+    /* ─── Hint ─── */
+    .hint {
+      font-size: 11.5px;
+      color: var(--text3);
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    /* ─── Error Box ─── */
+    .err {
+      display: none;
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.2);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      color: var(--red);
+      font-size: 13px;
+    }
+    .err:not(:empty) { display: block; }
+
+    /* ─── Loading Panel ─── */
+    .loading {
+      display: none;
+    }
+    .loading.visible { display: block; }
+
+    .ld-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .ld-head b {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    #pbMsg {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .progress {
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    #pb {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    /* ─── Agent Status Cards ─── */
+    .agents {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .agent {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .agent b {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .agent span {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text3);
+      background: var(--surface);
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .agent span.running { color: var(--amber); background: var(--amber-bg); }
+    .agent span.done    { color: var(--green); background: var(--green-bg); }
+
+    /* ─── Stats Row ─── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .stat {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 4px;
+    }
+    .stat-val {
+      font-size: 20px;
+      font-weight: 500;
+      font-family: var(--mono);
+      color: var(--text);
+    }
+    .stat-val.up   { color: var(--green); }
+    .stat-val.down { color: var(--red); }
+    .stat-change {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* ─── Results ─── */
+    .results { /* JS fills this */ }
+
+    /* ─── Footer ─── */
+    .page-footer {
+      padding: 10px 24px;
+      font-size: 11px;
+      color: var(--text3);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* ─── Scrollbar global ─── */
+    * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 20h18"/>
+          <path d="M6 16l4-5 4 3 4-8"/>
+        </svg>
+      </div>
+      <div class="brand-name">Fintrust AI</div>
+      <div class="brand-sub">Multi-Agent Stock Analyzer</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <div class="nav-group-label">Utama</div>
+        <div class="nav-item active">
+          <i class="ti ti-chart-bar"></i> Analisa Saham
+        </div>
+        <div class="nav-item">
+          <i class="ti ti-star"></i> Watchlist
+          <span class="nav-badge">3</span>
+        </div>
+        <div class="nav-item">
+          <i class="ti ti-history"></i> Riwayat Analisis
+        </div>
+        <div class="nav-item">
+          <i class="ti ti-bookmark"></i> Disimpan
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Pasar</div>
+        <div class="nav-item" onclick="setMarket('idx'); activateNav(this)">
+          <i class="ti ti-building-bank"></i> IDX / BEI
+        </div>
+        <div class="nav-item" onclick="setMarket('global'); activateNav(this)">
+          <i class="ti ti-world"></i> Global Market
+        </div>
+        <div class="nav-item" onclick="setMarket('crypto'); activateNav(this)">
+          <i class="ti ti-currency-bitcoin"></i> Crypto
+        </div>
+        <div class="nav-item" onclick="setMarket('ipo'); activateNav(this)">
+          <i class="ti ti-rocket"></i> IPO Upcoming
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-label">Tools</div>
+        <div class="nav-item">
+          <i class="ti ti-calculator"></i> Kalkulator Lot
+        </div>
+        <div class="nav-item">
+          <i class="ti ti-arrows-exchange"></i> Konversi Kurs
+        </div>
+        <div class="nav-item">
+          <i class="ti ti-news"></i> Berita Pasar
+        </div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="nav-item">
+        <i class="ti ti-settings"></i> Pengaturan
+      </div>
+      <div class="nav-item" style="font-size:12px; color:var(--text3);">
+        <i class="ti ti-shield-check"></i> Hanya untuk edukasi
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title">Analisa Saham</span>
+        <span class="topbar-crumb">
+          <i class="ti ti-chevron-right" style="font-size:13px;"></i>
+          <span id="activeMarketLabel">IDX / BEI</span>
+        </span>
+      </div>
+      <div class="topbar-right">
+        <div class="fx-tag" id="fxTag">Kurs memuat...</div>
+        <div class="topbar-btn"><i class="ti ti-refresh" id="refreshIcon"></i></div>
+        <div class="topbar-btn"><i class="ti ti-bell"></i></div>
+        <!-- <div class="topbar-btn"><i class="ti ti-user-circle"></i></div> -->
+        <div class="topbar-btn" onclick="openProfile()">
+            <i class="ti ti-user-circle"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="content">
+
+      <!-- Market Mode Pills -->
+      <div class="market-pills" id="market-pills-wrap">
+        <button id="mode-idx"    class="pill on"  onclick="setMarket('idx')">
+          <i class="ti ti-building-bank" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Saham Indonesia
+        </button>
+        <button id="mode-global" class="pill" onclick="setMarket('global')">
+          <i class="ti ti-world" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Saham Luar Negeri
+        </button>
+        <button id="mode-ipo"    class="pill" onclick="setMarket('ipo')">
+          <i class="ti ti-rocket" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>IPO / Watchlist
+        </button>
+        <button id="mode-crypto" class="pill" onclick="setMarket('crypto')">
+          <i class="ti ti-currency-bitcoin" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Crypto Market
+        </button>
+      </div>
+
+      <!-- Stat Bar -->
+      <div class="stat-row" id="statRow">
+        <div class="stat">
+          <div class="stat-label" style="display:flex;align-items:center;gap:5px;">
+            IDX Composite (IHSG)
+            <span id="ihsg-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--text3);"></span>
+          </div>
+          <div class="stat-val" id="stat-ihsg" style="color:var(--text2);">memuat...</div>
+          <div class="stat-change" id="stat-ihsg-change">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Volume harian IHSG</div>
+          <div class="stat-val" id="stat-vol" style="color:var(--text2);">memuat...</div>
+          <div class="stat-change" id="stat-vol-change">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">USD / IDR</div>
+          <div class="stat-val" id="stat-usd" style="color:var(--text2);">memuat...</div>
+          <div class="stat-change" id="stat-usd-change">—</div>
+        </div>
+      </div>
+
+      <!-- Input Panel -->
+      <div class="card" id="inputCard">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="ti ti-search"></i> Parameter Analisis
+          </div>
+        </div>
+
+        <div class="input-grid">
+          <div class="field">
+            <label>Kode saham (opsional)</label>
+            <input id="tickerIn" class="ticker" placeholder="BBCA, AAPL, BBRI, NVDA..." maxlength="120">
+          </div>
+          <div class="field">
+            <label>Cakupan / sektor</label>
+            <select id="sectorSelect"></select>
+          </div>
+          <div class="field">
+            <label>Nominal investasi (opsional)</label>
+            <input id="amountIn" placeholder="1.000.000" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label>Mata uang</label>
+            <select id="currencyIn">
+              <option value="IDR">IDR — Rupiah</option>
+              <option value="USD">USD — Dollar</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>Pilihan cepat</label>
+            <div class="quick" id="quickRow"></div>
+          </div>
+        </div>
+
+        <button id="goBtn" class="btn" onclick="run()">
+          <i class="ti ti-player-play"></i> Jalankan Analisis
+        </button>
+        <p class="hint">Kosongkan kode saham dan isi nominal untuk rekomendasi otomatis. Jika kode dan nominal sama-sama kosong, sistem akan menolak input agar hasil tidak kosong.</p>
+      </div>
+
+      <!-- Error Box -->
+      <div id="errbox" class="err"></div>
+
+      <!-- Loading Panel -->
+      <div id="loading" class="card loading">
+        <div class="ld-head">
+          <b id="loadTitle">Menjalankan agent</b>
+          <span id="pbMsg">Menyiapkan analisis...</span>
+        </div>
+        <div class="progress"><div id="pb"></div></div>
+        <div class="agents">
+          <div class="agent">
+            <b>Fundamental</b>
+            <span id="st-fundamental">standby</span>
+          </div>
+          <div class="agent">
+            <b>Technical</b>
+            <span id="st-technical">standby</span>
+          </div>
+          <div class="agent">
+            <b>Sentiment</b>
+            <span id="st-sentiment">standby</span>
+          </div>
+          <div class="agent">
+            <b>Risk</b>
+            <span id="st-risk">standby</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <main id="results" class="results"></main>
+
+    </div><!-- /content -->
+
+    <div class="page-footer" id="page-footer-wrap">Hanya untuk edukasi dan riset. Bukan saran investasi resmi. &copy; Fintrust AI 2026</div>
+
+  </div><!-- /main -->
+</div><!-- /app-shell -->
+
+<script>
+  /* ─── Helper: activate sidebar nav item ─── */
+  function activateNav(el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  /* ─── Market label update ─── */
+  const marketLabels = {
+    idx: 'IDX / BEI',
+    global: 'Global Market',
+    ipo: 'IPO Upcoming',
+    crypto: 'Crypto Market'
+  };
+
+  /* ─── Patch setMarket to update topbar label ─── */
+  const _origSetMarket = window.setMarket;
+  function setMarket(mode) {
+    if (typeof _origSetMarket === 'function') _origSetMarket(mode);
+    const label = document.getElementById('activeMarketLabel');
+    if (label) label.textContent = marketLabels[mode] || mode;
+  }
+
+  /* ─── Loading state: add/remove 'visible' class ─── */
+  const _loadingEl = document.getElementById('loading');
+  const _observer = new MutationObserver(() => {
+    const display = window.getComputedStyle(_loadingEl).display;
+    if (display !== 'none') _loadingEl.classList.add('visible');
+    else _loadingEl.classList.remove('visible');
+  });
+  if (_loadingEl) _observer.observe(_loadingEl, { attributes: true, attributeFilter: ['style'] });
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   LIVE MARKET DATA — IDX Composite + USD/IDR
+   Sumber: Yahoo Finance via allorigins CORS proxy
+   Refresh otomatis setiap 60 detik
+   ═══════════════════════════════════════════════════════ */
+(function() {
+
+  /* ── Format angka ribuan dengan titik (IDR style) ── */
+  function fmt(n, dec = 2) {
+    if (n == null || isNaN(n)) return '—';
+    return n.toLocaleString('id-ID', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+
+  /* ── Format volume: tampilkan dalam Miliar / Triliun ── */
+  function fmtVol(n) {
+    if (!n || isNaN(n)) return '—';
+    if (n >= 1e12) return (n / 1e12).toFixed(2) + ' T';
+    if (n >= 1e9)  return (n / 1e9).toFixed(2) + ' M';
+    if (n >= 1e6)  return (n / 1e6).toFixed(2) + ' jt';
+    return n.toLocaleString('id-ID');
+  }
+
+  /* ── Set warna stat val berdasarkan arah perubahan ── */
+  function setColor(elId, val) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.classList.remove('up', 'down');
+    if (val > 0) el.classList.add('up');
+    else if (val < 0) el.classList.add('down');
+  }
+
+  /* ── Dot animasi live ── */
+  function setPulseDot(ok) {
+    const dot = document.getElementById('ihsg-live-dot');
+    if (!dot) return;
+    dot.style.background = ok ? 'var(--green)' : 'var(--red)';
+    dot.title = ok ? 'Data live' : 'Gagal memuat';
+  }
+
+  /* ── Fetch satu simbol Yahoo Finance ── */
+  /* ── Update IHSG stat ── */
+  async function loadIHSG() {
+    try {
+      const r = await fetch('/api/market/ihsg', { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const m = await r.json();
+      if (m.error) throw new Error(m.error);
+      const price   = m.regularMarketPrice;
+      const prev    = m.chartPreviousClose || m.previousClose;
+      const change  = m.regularMarketChange ?? (price - prev);
+      const changePct = m.regularMarketChangePercent ?? ((change / prev) * 100);
+      let vol = m.regularMarketVolume;
+
+      /* Nilai */
+      const elPrice = document.getElementById('stat-ihsg');
+      if (elPrice) elPrice.textContent = fmt(price, 2);
+      setColor('stat-ihsg', change);
+
+      /* Perubahan % */
+      const elChg = document.getElementById('stat-ihsg-change');
+      if (elChg) {
+        const sign = change >= 0 ? '+' : '';
+        elChg.textContent = `${sign}${fmt(change, 2)} (${sign}${changePct.toFixed(2)}%) hari ini`;
+        elChg.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+      }
+
+      /* Volume — jika null, coba fetch dari IDX API via browser */
+      const elVol = document.getElementById('stat-vol');
+      const elVolChg = document.getElementById('stat-vol-change');
+      if (vol && vol > 0) {
+        if (elVol) { elVol.textContent = fmtVol(vol); elVol.style.color = 'var(--text)'; }
+        if (elVolChg) elVolChg.textContent = 'volume harian IHSG';
+      } else {
+        /* Tampilkan loading sementara fetch IDX */
+        if (elVol) elVol.textContent = 'memuat...';
+        fetchIDXVolume().then(idxVol => {
+          if (elVol) {
+            if (idxVol && idxVol > 0) {
+              elVol.textContent = fmtVol(idxVol);
+              elVol.style.color = 'var(--text)';
+              if (elVolChg) elVolChg.textContent = 'vol. transaksi IDX hari ini';
+            } else {
+              elVol.textContent = '—';
+              if (elVolChg) elVolChg.textContent = 'data tidak tersedia';
+            }
+          }
+        }).catch(() => { if (elVol) elVol.textContent = '—'; });
+      }
+
+      setPulseDot(true);
+    } catch (e) {
+      console.warn('[StockMind] Gagal memuat IHSG:', e);
+      const elPrice = document.getElementById('stat-ihsg');
+      if (elPrice) { elPrice.textContent = 'Gagal'; elPrice.style.color = 'var(--red)'; }
+      setPulseDot(false);
+    }
+  }
+
+  /* ── Fetch volume transaksi IDX dari Yahoo chart API ── */
+  async function fetchIDXVolume() {
+    try {
+      /* Yahoo Finance chart API langsung — browser tidak kena CORS untuk ini */
+      const to   = Math.floor(Date.now() / 1000);
+      const from = to - 7 * 24 * 3600;
+      const url  = `https://query1.finance.yahoo.com/v8/finance/chart/%5EJKSE?interval=1d&period1=${from}&period2=${to}`;
+      const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const r = await fetch(proxy, { cache: 'no-store' });
+      const j = await r.json();
+      const parsed = JSON.parse(j.contents);
+      const quotes = parsed?.chart?.result?.[0];
+      if (!quotes) return null;
+      /* Cari volume dari timestamps terakhir */
+      const volumes = quotes.indicators?.quote?.[0]?.volume || [];
+      for (let i = volumes.length - 1; i >= 0; i--) {
+        if (volumes[i] != null && volumes[i] > 0) return volumes[i];
+      }
+      return null;
+    } catch (_) { return null; }
+  }
+
+  /* ── Update USD/IDR stat ── */
+  async function loadUSDIDR() {
+    try {
+      const r = await fetch('/api/fx/usdidr', { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const m = await r.json();
+      if (m.error) throw new Error(m.error);
+      const price     = m.rate || m.USDIDR;
+      const change    = m.regularMarketChange ?? 0;
+      const changePct = m.regularMarketChangePercent ?? 0;
+
+      const elUsd = document.getElementById('stat-usd');
+      if (elUsd) { elUsd.textContent = fmt(price, 0); }
+      setColor('stat-usd', -change); /* IDR lemah = merah */
+
+      const elUsdChg = document.getElementById('stat-usd-change');
+      if (elUsdChg) {
+        const sign = change >= 0 ? '+' : '';
+        elUsdChg.textContent = `${sign}${fmt(change, 0)} (${sign}${changePct.toFixed(2)}%) hari ini`;
+        /* Kalau USD naik → IDR melemah → merah */
+        elUsdChg.style.color = change >= 0 ? 'var(--red)' : 'var(--green)';
+      }
+
+      /* Juga update fxTag di topbar jika belum diisi JS utama */
+      const fxTag = document.getElementById('fxTag');
+      if (fxTag && fxTag.textContent.includes('memuat')) {
+        fxTag.textContent = `USD/IDR ${fmt(price, 0)}`;
+      }
+    } catch (e) {
+      console.warn('[StockMind] Gagal memuat USD/IDR:', e);
+      const elUsd = document.getElementById('stat-usd');
+      if (elUsd) { elUsd.textContent = 'Gagal'; elUsd.style.color = 'var(--red)'; }
+    }
+  }
+
+  /* ── Jalankan semua & refresh tiap 60 detik ── */
+  async function refreshAll() {
+    await Promise.all([loadIHSG(), loadUSDIDR()]);
+  }
+
+  /* Tunggu DOM siap */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { refreshAll(); setInterval(refreshAll, 60000); });
+  } else {
+    refreshAll();
+    setInterval(refreshAll, 60000);
+  }
+
+  /* Refresh manual lewat tombol di topbar */
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.querySelector('.topbar-btn');
+    if (btn) btn.addEventListener('click', () => {
+      const icon = document.getElementById('refreshIcon');
+      if (icon) { icon.style.transition = 'transform 0.5s'; icon.style.transform = 'rotate(360deg)'; setTimeout(() => { icon.style.transition = ''; icon.style.transform = ''; }, 500); }
+      refreshAll();
+    });
+  });
+
+})();
+</script>
+
+<script src="js/stockmind_templates.js"></script>
+<script src="js/stockmind_ui.js"></script>
+</body>
+</html>
+<div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border-radius:16px;padding:32px;min-width:320px;max-width:400px;width:90%;color:#fff;position:relative;">
+    <button onclick="closeProfile()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;">&times;</button>
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:72px;height:72px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;">👤</div>
+      <h2 id="prof-name" style="margin:0;font-size:1.3em;">-</h2>
+      <p id="prof-username" style="margin:4px 0;color:#94a3b8;font-size:0.9em;">-</p>
+    </div>
+    <div style="border-top:1px solid #334155;padding-top:16px;display:grid;gap:12px;">
+      <div><small style="color:#64748b;">Email</small><p id="prof-email" style="margin:2px 0;">-</p></div>
+      <div><small style="color:#64748b;">Role</small><p id="prof-role" style="margin:2px 0;">-</p></div>
+      <div><small style="color:#64748b;">Bergabung</small><p id="prof-joined" style="margin:2px 0;">-</p></div>
+    </div>
+    <button onclick="doLogout()" style="margin-top:24px;width:100%;padding:10px;background:#ef4444;border:none;border-radius:8px;color:#fff;font-size:1em;cursor:pointer;">Keluar</button>
+  </div>
+</div>
+<script>
+function openProfile(){
+  const m=document.getElementById("profileModal");
+  m.style.display="flex";
+  const u=JSON.parse(localStorage.getItem("stockmind_user")||"{}");
+  if(u.id){
+    fetch("auth/profile.php?user_id="+u.id)
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.success){
+          const p=d.user;
+          document.getElementById("prof-name").textContent=p.full_name||"-";
+          document.getElementById("prof-username").textContent="@"+(p.username||"-");
+          document.getElementById("prof-email").textContent=p.email||"-";
+          document.getElementById("prof-role").textContent=p.role||"-";
+          document.getElementById("prof-joined").textContent=p.created_at?new Date(p.created_at).toLocaleDateString("id-ID"):"-";
+        }
+      });
+  } else {
+    document.getElementById("prof-name").textContent=u.full_name||"Guest";
+    document.getElementById("prof-username").textContent="@"+(u.username||"-");
+    document.getElementById("prof-email").textContent=u.email||"-";
+    document.getElementById("prof-role").textContent=u.role||"-";
+  }
+}
+function closeProfile(){document.getElementById("profileModal").style.display="none";}
+function doLogout(){localStorage.removeItem("stockmind_user");window.location.href="login.html";}
+</script>

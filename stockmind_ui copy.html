@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockMind AI</title>
+  <link rel="stylesheet" href="css/stockmind_ui.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 20h18"/>
+            <path d="M6 16l4-5 4 3 4-8"/>
+          </svg>
+        </div>
+        <div>
+          <h1>StockMind AI</h1>
+          <p>Multi-Agent Stock Analyzer · IDX & Global Market</p>
+        </div>
+      </div>
+      <div class="tag" id="fxTag">Groq AI · Yahoo Finance · Kurs memuat...</div>
+    </header>
+
+    <section class="panel input-panel">
+      <div class="grid">
+        <div class="field">
+          <label>Kode saham opsional</label>
+          <input id="tickerIn" class="ticker" placeholder="BBCA, AAPL, atau BBCA, BBRI" maxlength="120">
+        </div>
+        <div class="field">
+          <label>Cakupan pencarian / sektor</label>
+          <select id="sectorSelect"></select>
+        </div>
+        <div class="field">
+          <label>Nominal investasi opsional</label>
+          <input id="amountIn" placeholder="1000000" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Mata uang</label>
+          <select id="currencyIn">
+            <option value="IDR">IDR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+        <button id="goBtn" class="btn" onclick="run()">Analisa</button>
+      </div>
+      <div class="mode-row">
+        <button id="mode-idx" class="pill on" onclick="setMarket('idx')">Saham Indonesia</button>
+        <button id="mode-global" class="pill" onclick="setMarket('global')">Saham Luar Negeri</button>
+        <button id="mode-ipo" class="pill" onclick="setMarket('ipo')">IPO / Watchlist</button>
+        <button id="mode-crypto" class="pill" onclick="setMarket('crypto')">Crypto Market</button>
+      </div>
+      <div class="quick" id="quickRow"></div>
+      <p class="hint">Kosongkan kode saham dan isi nominal untuk rekomendasi otomatis. Jika kode dan nominal sama-sama kosong, sistem akan menolak input agar hasil tidak kosong.</p>
+    </section>
+
+    <div id="errbox" class="err"></div>
+
+    <section id="loading" class="panel loading">
+      <div class="ld-head">
+        <b id="loadTitle">Menjalankan agent</b>
+        <span id="pbMsg">Menyiapkan analisis...</span>
+      </div>
+      <div class="progress"><div id="pb"></div></div>
+      <div class="agents">
+        <div class="agent"><b>Fundamental</b><span id="st-fundamental">standby</span></div>
+        <div class="agent"><b>Technical</b><span id="st-technical">standby</span></div>
+        <div class="agent"><b>Sentiment</b><span id="st-sentiment">standby</span></div>
+        <div class="agent"><b>Risk</b><span id="st-risk">standby</span></div>
+      </div>
+    </section>
+
+    <main id="results" class="results"></main>
+
+    <div class="footer">Hanya untuk edukasi dan riset. Bukan saran investasi resmi.</div>
+  </div>
+
+  <script src="js/stockmind_templates.js"></script> 
+  <script src="js/stockmind_ui.js"></script>
+</body>
+</html>
