@@ -58,8 +58,19 @@ function unique(arr) { return [...new Set(arr.map(x => String(x).toUpperCase().t
 
 function setMarket(m) {
   market = m;
-  ['idx','global','ipo','crypto'].forEach(x => {const btn = el(`mode-${x}`); if(btn) btn.classList.toggle('on', x === m);});
+
+  ['idx','global','ipo','crypto'].forEach(x => {
+    const btn = el(`mode-${x}`); 
+    if(btn) btn.classList.toggle('on', x === m);
+  });
+
+  const cryptoPanel = document.getElementById('cryptoPanel');
+  if (cryptoPanel) {
+    cryptoPanel.style.display = (m === 'crypto') ? 'block' : 'none';
+  }
+
   el('currencyIn').value = (m === 'global' || m === 'crypto') ? 'USD' : 'IDR';
+  
   if (m === 'crypto') {
     el('tickerIn').placeholder = 'BTC-USD, ETH-USD atau SOL-USD';
   } else if (m === 'global') {
@@ -67,7 +78,10 @@ function setMarket(m) {
   } else {
     el('tickerIn').placeholder = 'BBCA, ADRO atau BBCA, BBRI, BMRI';
   }
-  renderSector(); renderQuick(); hideErr();
+  
+  renderSector(); 
+  renderQuick(); 
+  hideErr();
 }
 
 function renderSector() {
@@ -1571,3 +1585,92 @@ window.renderDisimpanPage = async function(container) {
   const empty = '<div style="text-align:center;padding:40px;color:var(--text3);"><i class="ti ti-bookmark" style="font-size:40px;display:block;margin-bottom:12px;"></i><div>Belum ada analisis tersimpan</div></div>';
   container.innerHTML = '<div class="card"><div class="card-header"><div class="card-title"><i class="ti ti-bookmark"></i> Analisis Disimpan</div></div>'+(list.length===0?empty:'<div style="display:flex;flex-direction:column;gap:8px;">'+rows+'</div>')+'</div>';
 };
+
+/* =================================================================
+   LOGIKA EKSEKUSI PREDIKSI CRYPTO (KONTAINER TERPISAH)
+   ================================================================= */
+async function runCryptoContainerPrediction() {
+    const tickerInput = document.getElementById('cryptoBoxTicker');
+    const modelSelect = document.getElementById('cryptoBoxModel');
+    const resultBox = document.getElementById('cryptoBoxResultDisplay');
+    const btn = document.getElementById('btnExecuteCryptoBox');
+
+    let ticker = tickerInput.value.trim().toUpperCase();
+    const model = modelSelect.value;
+
+    if (!ticker) {
+        alert("Mohon masukkan simbol koin kripto terlebih dahulu.");
+        return;
+    }
+
+    // Koreksi otomatis jika user lupa menuliskan -USD
+    if (!ticker.includes('-')) {
+        ticker = `${ticker}-USD`;
+        tickerInput.value = ticker;
+    }
+
+    // Set UI Loading
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = `
+        <div style="text-align: center; padding: 20px; color: var(--green);">
+            <i class="ti ti-loader" style="animation: spin 1s linear infinite; font-size: 24px; display: inline-block; margin-bottom: 8px;"></i>
+            <div>Memproses data historis & kalkulasi indikator model ${model.toUpperCase()} v3...</div>
+        </div>
+    `;
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+
+    try {
+        const response = await fetch('/api/predict_crypto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticker: ticker, model: model })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            resultBox.innerHTML = `
+                <div style="color: var(--red); padding: 5px;">
+                    <i class="ti ti-alert-triangle"></i> <b>Gagal:</b> ${esc(data.error)}
+                </div>
+            `;
+        } else {
+            const isBullish = data.class === 1;
+            const trendColor = isBullish ? 'var(--green)' : 'var(--red)';
+            const bgLight = isBullish ? 'rgba(98, 196, 130, 0.1)' : 'rgba(224, 106, 106, 0.1)';
+            const icon = isBullish ? 'ti-trending-up' : 'ti-trending-down';
+            const confPercent = (data.confidence * 100).toFixed(2);
+
+            resultBox.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold; color: #fff; font-family: var(--mono);">${esc(data.ticker)}</div>
+                        <div style="font-size: 11px; color: var(--muted);">Model: ${esc(data.model)}</div>
+                    </div>
+                    <div style="background: ${bgLight}; border: 1px solid ${trendColor}; color: ${trendColor}; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                        <i class="ti ${icon}"></i> ${esc(data.trend)}
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px;">
+                        <span style="color: var(--muted);">Tingkat Keyakinan (Confidence)</span>
+                        <span style="color: #fff; font-weight: bold;">${confPercent}%</span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden;">
+                        <div style="width: ${confPercent}%; height: 100%; background: ${trendColor};"></div>
+                    </div>
+                    <div style="font-size: 11px; color: var(--dim); margin-top: 10px;">
+                        * Batas validasi keputusan (Threshold): ${data.threshold_used * 100}%
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultBox.innerHTML = `<div style="color: var(--red);"><b>Gagal terhubung ke server:</b> ${error.message}</div>`;
+    } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}

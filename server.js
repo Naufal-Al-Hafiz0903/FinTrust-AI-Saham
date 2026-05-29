@@ -424,7 +424,35 @@ app.get("/api/predict/:ticker", async (req, res) => {
   }
 });
 
-// MULTI-MODEL PREDICTIONS (XGBoost, Random Forest)
+// ENDPOINT AKSES PREDIKSI CRYPTO V3 
+app.post("/api/predict_crypto", async (req, res) => {
+  const { ticker, model } = req.body;
+  
+  if (!ticker || !model) {
+      return res.status(400).json({ error: "Ticker dan model tidak boleh kosong" });
+  }
+
+  const symbol = ticker.includes("-") ? ticker : `${ticker}-USD`;
+
+  try {
+
+    const historicalData = await fetchHistoricalData(symbol, "2y");
+
+    const scriptPath = path.join(__dirname, "predict_crypto.py");
+    
+    const result = await runPythonWithData(scriptPath, { 
+        ticker: symbol, 
+        model: model,
+        data: historicalData 
+    }, 60_000);
+
+    res.json(result);
+  } catch (err) {
+    console.error(`[CRYPTO CONTAINER API] Error:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/api/predict/:model/:ticker", async (req, res) => {
   const { model, ticker: rawTicker } = req.params;
   const market = req.query.market || "idx";

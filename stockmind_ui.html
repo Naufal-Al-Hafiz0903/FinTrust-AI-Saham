@@ -724,6 +724,37 @@
 
       <!-- Results -->
       <main id="results" class="results"></main>
+      <section id="cryptoDedicatedContainer" class="panel" style="margin-top: 30px; border: 1px solid var(--border); background: var(--bg2); padding: 20px; border-radius: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <i class="ti ti-currency-bitcoin" style="font-size: 24px; color: var(--green);"></i>
+        <h2 style="margin: 0; font-size: 1.25rem; color: #fff;"> Panel Prediksi Crypto Eksklusif (Model v3)</h2>
+      </div>
+      
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">
+        Panel ini bekerja terpisah dari sistem saham. Menggunakan model seri v3 (XGBoost & Random Forest) yang dilatih khusus dengan pola data kripto.
+      </p>
+
+      <div class="grid" style="grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
+        <div class="field">
+          <label style="display: block; margin-bottom: 8px; font-size: 12px; color: var(--muted);">Simbol Kripto</label>
+          <input type="text" id="cryptoBoxTicker" placeholder="Contoh: BTC-USD, ETH-USD" value="BTC-USD" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: #fff;">
+        </div>
+        <div class="field">
+          <label style="display: block; margin-bottom: 8px; font-size: 12px; color: var(--muted);">Pilih Arsitektur Model</label>
+          <select id="cryptoBoxModel" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: #fff;">
+            <option value="xgb">XGBoost Crypto v3</option>
+            <option value="rf">Random Forest Crypto v3</option>
+          </select>
+        </div>
+        <div class="field">
+          <button id="btnExecuteCryptoBox" class="pill" style="background: var(--accent); color: #fff; padding: 12px 24px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;" onclick="runCryptoContainerPrediction()">
+            Jalankan Analisis Crypto
+          </button>
+        </div>
+      </div>
+
+      <div id="cryptoBoxResultDisplay" style="display: none; margin-top: 20px; padding: 15px; background: var(--bg3); border-radius: 8px; border: 1px dashed var(--line);"></div>
+    </section>
 
     </div><!-- /content -->
 
