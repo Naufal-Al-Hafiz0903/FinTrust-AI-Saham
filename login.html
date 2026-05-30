@@ -2,8 +2,12 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Fintrust AI — Masuk</title>
+
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -120,6 +124,20 @@
       margin-bottom: 14px;
       box-shadow: 0 0 0 1px rgba(59,130,246,0.3), 0 8px 32px rgba(59,130,246,0.2);
     }
+
+    .brand-logo {
+      overflow: hidden;
+      background: transparent !important;
+      padding: 0;
+    }
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      border-radius: inherit;
+    }
+
     .brand-logo svg {
       width: 28px; height: 28px;
       stroke: #fff; stroke-width: 2.2;
@@ -343,6 +361,7 @@
       animation: spin 0.6s linear infinite;
     }
   </style>
+  <link rel="stylesheet" href="css/stockmind_responsive.css?v=20260529-chart-adaptive-final">
 </head>
 <body>
 
@@ -355,10 +374,7 @@
     <!-- Brand -->
     <div class="brand">
       <div class="brand-logo">
-        <svg viewBox="0 0 24 24">
-          <path d="M3 20h18"/>
-          <path d="M6 16l4-5 4 3 4-8"/>
-        </svg>
+        <img src="assets/jarvis-icon.png" alt="Fintrust AI icon">
       </div>
       <div class="brand-name">Fintrust AI</div>
       <div class="brand-sub">Multi-Agent Stock Analyzer</div>
@@ -538,12 +554,57 @@
     const btn = document.getElementById(btnId);
     if (!btn) return;
     if (loading) {
-      btn.dataset.orig = btn.innerHTML;
+      if (!btn.dataset.orig) btn.dataset.orig = btn.innerHTML;
       btn.innerHTML = '<div class="spinner"></div> Memproses...';
       btn.classList.add('loading');
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
     } else {
-      btn.innerHTML = btn.dataset.orig || originalHTML;
+      btn.innerHTML = btn.dataset.orig || originalHTML || btn.innerHTML;
       btn.classList.remove('loading');
+      btn.disabled = false;
+      btn.removeAttribute('aria-busy');
+    }
+  }
+
+  /* ─── Fetch JSON dengan timeout agar tombol tidak buffering terus ─── */
+  async function postJSON(url, payload, timeoutMs = 18000) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'same-origin',
+        cache: 'no-store',
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+
+      const text = await res.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (_) {
+        throw new Error(`Server mengembalikan response tidak valid (HTTP ${res.status}).`);
+      }
+
+      if (!res.ok && (!data || data.success !== true)) {
+        throw new Error(data?.message || `Request gagal (HTTP ${res.status}).`);
+      }
+
+      return data || { success: false, message: 'Response server kosong.' };
+    } catch (err) {
+      if (err && err.name === 'AbortError') {
+        throw new Error('Server terlalu lama merespons. Silakan coba lagi atau cek koneksi/server.');
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
@@ -562,28 +623,35 @@
       return;
     }
 
+    let loginSukses = false;
     setBtnLoading('loginBtn', true);
 
     try {
-      const res = await fetch('auth/login.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user, pass })
-      });
-      const data = await res.json();
+      const data = await postJSON('auth/login.php', { user, pass });
 
       if (data.success) {
+        loginSukses = true;
         showAlert('loginAlert', 'loginAlertMsg', 'Login berhasil! Mengalihkan...', 'success');
-        localStorage.setItem('stockmind_user', JSON.stringify(data.user));
-        setTimeout(() => { window.location.href = 'stockmind_ui.html'; }, 900);
+        localStorage.setItem('stockmind_user', JSON.stringify(data.user || {}));
+
+        const btn = document.getElementById('loginBtn');
+        if (btn) btn.innerHTML = '<i class="ti ti-login"></i> Mengalihkan...';
+
+        const target = new URL('stockmind_ui.html', window.location.href).href;
+        window.location.assign(target);
+
+        /* Fallback untuk beberapa mobile webview yang kadang menahan assign() */
+        setTimeout(() => {
+          if (location.href !== target) window.location.replace(target);
+        }, 1200);
       } else {
         showAlert('loginAlert', 'loginAlertMsg', data.message || 'Email/username atau sandi salah.');
       }
     } catch (err) {
-      showAlert('loginAlert', 'loginAlertMsg', 'Koneksi ke server gagal. Coba lagi.');
+      showAlert('loginAlert', 'loginAlertMsg', err.message || 'Koneksi ke server gagal. Coba lagi.');
       console.error(err);
     } finally {
-      setBtnLoading('loginBtn', false);
+      if (!loginSukses) setBtnLoading('loginBtn', false);
     }
   }
 
@@ -621,12 +689,7 @@
     setBtnLoading('registerBtn', true);
 
     try {
-      const res = await fetch('auth/register.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, username, email, pass })
-      });
-      const data = await res.json();
+      const data = await postJSON('auth/register.php', { name, username, email, pass }, 22000);
 
       if (data.success) {
         showAlert('registerAlert', 'registerAlertMsg', 'Akun berhasil dibuat! Silakan masuk.', 'success');
@@ -636,7 +699,7 @@
         showAlert('registerAlert', 'registerAlertMsg', data.message || 'Pendaftaran gagal. Coba lagi.');
       }
     } catch (err) {
-      showAlert('registerAlert', 'registerAlertMsg', 'Koneksi ke server gagal. Coba lagi.');
+      showAlert('registerAlert', 'registerAlertMsg', err.message || 'Koneksi ke server gagal. Coba lagi.');
       console.error(err);
     } finally {
       setBtnLoading('registerBtn', false);
@@ -649,5 +712,6 @@
     if (params.get('panel') === 'register') switchPanel('register');
   })();
 </script>
+<script src="js/fintrust_responsive_runtime.js?v=20260529-chart-adaptive-final"></script>
 </body>
 </html>

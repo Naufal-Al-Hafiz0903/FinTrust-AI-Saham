@@ -1,0 +1,52 @@
+/* FINTRUST WHITE SCREEN GUARD V14 */
+
+html,
+body {
+  min-height: 100% !important;
+  background: #070d18 !important;
+  color: #eaf6ee !important;
+}
+
+body {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.app,
+.app-shell,
+.dashboard,
+.layout,
+.main,
+.content,
+.sidebar,
+main {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+#app,
+#root {
+  min-height: 100vh !important;
+  background: #070d18 !important;
+}
+
+/* Jika ada class hidden dari script gagal, jangan biarkan blank total */
+body.fintrust-force-visible .app,
+body.fintrust-force-visible .app-shell,
+body.fintrust-force-visible .dashboard,
+body.fintrust-force-visible .layout,
+body.fintrust-force-visible main,
+body.fintrust-force-visible .main,
+body.fintrust-force-visible .content {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Jaga layout utama tetap gelap */
+body.fintrust-force-visible {
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, .18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(99, 210, 138, .12), transparent 32%),
+    #070d18 !important;
+}

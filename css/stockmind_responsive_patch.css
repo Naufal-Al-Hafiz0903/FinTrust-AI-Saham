@@ -1,0 +1,367 @@
+/* ═══════════════════════════════════════════════════════════════
+   FINTRUST AI — RESPONSIVE PATCH
+   Tambahkan file ini: <link rel="stylesheet" href="css/stockmind_responsive.css">
+   SETELAH baris: <link rel="stylesheet" href="css/stockmind_ui.css">
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ──────────────────────────────────────────────
+   1. VARIABEL TAMBAHAN
+   ────────────────────────────────────────────── */
+:root {
+  --topbar-h: 56px;
+  --content-max: 1280px;
+}
+
+/* ──────────────────────────────────────────────
+   2. DESKTOP BESAR (≥ 1440px) — Lebar maksimum
+   ────────────────────────────────────────────── */
+@media (min-width: 1440px) {
+  .content {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 28px 36px;
+  }
+  .stat-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .input-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .agents {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ──────────────────────────────────────────────
+   3. DESKTOP STANDAR (1025px – 1439px)
+   ────────────────────────────────────────────── */
+@media (min-width: 1025px) and (max-width: 1439px) {
+  .content {
+    padding: 24px 28px;
+  }
+  .stat-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .agents {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .input-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   4. TABLET LANDSCAPE (769px – 1024px)
+   ────────────────────────────────────────────── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  :root {
+    --sidebar-w: 200px;
+  }
+
+  body { overflow: auto; }
+
+  .app-shell {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .main {
+    overflow: visible;
+  }
+
+  .content {
+    padding: 18px 20px;
+    gap: 16px;
+    overflow: visible;
+  }
+
+  /* Topbar */
+  .topbar {
+    padding: 0 18px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  /* Stat row: 3 kolom tetap tapi lebih compact */
+  .stat-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .stat-val { font-size: 17px; }
+
+  /* Input grid: 2 kolom */
+  .input-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Agents: 2 kolom */
+  .agents {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Sidebar compact */
+  .brand-name { font-size: 14px; }
+  .brand-sub  { font-size: 10px; }
+  .nav-item   { font-size: 12.5px; padding: 7px 8px; }
+  .nav-item i { font-size: 15px; }
+  .nav-group-label { font-size: 9px; }
+
+  /* Card padding lebih kecil */
+  .card { padding: 16px 18px; }
+
+  /* Tabel hasil analisis */
+  #results {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  #results .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #results table {
+    min-width: 560px;
+    font-size: 12.5px;
+  }
+  #results td, #results th {
+    padding: 8px 10px !important;
+    white-space: nowrap;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   5. TABLET PORTRAIT (600px – 768px)
+   ────────────────────────────────────────────── */
+@media (min-width: 600px) and (max-width: 768px) {
+  /* Stat row: 3 kolom kecil */
+  .stat-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .stat-val { font-size: 15px; }
+  .stat-label { font-size: 10px; }
+
+  /* Input grid: 2 kolom */
+  .input-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Agents: 2 kolom */
+  .agents {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Profile modal */
+  #profileModal > div {
+    max-width: 92vw !important;
+    padding: 24px !important;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   6. MOBILE (≤ 768px) — OVERRIDE & FIX
+   ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Fix: hasil analisis tidak keluar layar */
+  #results {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  /* Setiap div/section langsung dalam #results */
+  #results > * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Wrap semua tabel dengan scroll horizontal */
+  #results .table-wrap,
+  #results [class*="table"] {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+    border-radius: 8px;
+  }
+
+  /* Tabel di dalam results */
+  #results table {
+    min-width: 520px;
+    width: max-content;
+    border-collapse: collapse;
+  }
+
+  #results th,
+  #results td {
+    white-space: nowrap;
+    font-size: 12px !important;
+    padding: 9px 10px !important;
+  }
+
+  /* Chart / canvas: tidak meluber */
+  #results canvas,
+  #results svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Stat row: 1 kolom di layar sangat kecil */
+  .stat-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* Profile modal: full width di mobile */
+  #profileModal > div {
+    max-width: 94vw !important;
+    width: 94vw !important;
+    padding: 22px 18px !important;
+    margin: 0 3vw;
+  }
+
+  /* Topbar: sembunyikan bell tapi tampilkan semua yang penting */
+  .topbar-right {
+    gap: 7px;
+  }
+
+  /* Market pills: horizontal scroll */
+  .market-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 7px;
+    padding-bottom: 4px;
+  }
+  .market-pills::-webkit-scrollbar { display: none; }
+  .pill {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 5px 14px;
+  }
+
+  /* Quick picks: horizontal scroll */
+  .quick, .quick-picks {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .quick::-webkit-scrollbar,
+  .quick-picks::-webkit-scrollbar { display: none; }
+  .qpick { flex-shrink: 0; }
+
+  /* Hint text lebih kecil */
+  .hint { font-size: 11px; }
+
+  /* Loading agents: 1 kolom */
+  .agents {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  /* Input grid: 1 kolom */
+  .input-grid {
+    grid-template-columns: 1fr;
+  }
+  .field.full { grid-column: 1; }
+
+  /* Card padding */
+  .card { padding: 14px; }
+
+  /* Konten card hasil analisis: padding kecil */
+  #results .card,
+  #results [class*="card"] {
+    padding: 12px !important;
+  }
+
+  /* Chip/badge dalam results */
+  #results [class*="badge"],
+  #results [class*="chip"],
+  #results [class*="tag"] {
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   7. MOBILE KECIL (≤ 400px)
+   ────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .topbar-title  { font-size: 13px; }
+  .stat-val      { font-size: 16px; }
+  .pill          { font-size: 11px; padding: 5px 11px; }
+  .brand-name    { font-size: 14px; }
+  .fx-tag        { font-size: 10px; padding: 3px 8px; }
+  .topbar-btn    { width: 30px; height: 30px; }
+  .topbar-btn i  { font-size: 15px; }
+  .card          { padding: 12px 10px; }
+  .btn, .run-btn { font-size: 13px; padding: 10px; }
+
+  /* Sembunyikan bell di HP kecil */
+  .topbar-btn:has(.ti-bell) { display: none; }
+
+  #profileModal > div {
+    padding: 18px 14px !important;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   8. UTILITAS UMUM — Semua ukuran layar
+   ────────────────────────────────────────────── */
+
+/* Smooth scroll */
+.content {
+  scroll-behavior: smooth;
+}
+
+/* Semua elemen dalam results tidak meluber */
+#results * {
+  max-width: 100%;
+}
+
+/* Exception untuk tabel — boleh lebih lebar dari container (dalam wrapper scroll) */
+#results .table-wrap *,
+#results table,
+#results table * {
+  max-width: none;
+}
+
+/* Fokus aksesibilitas */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Mencegah zoom di iOS saat tap input */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  /* Khusus label tetap kecil */
+  .field label {
+    font-size: 11.5px !important;
+  }
+}
+
+/* Scrollbar tipis untuk semua tabel scroll */
+.table-wrap::-webkit-scrollbar {
+  height: 4px;
+}
+.table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+.table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 4px;
+}

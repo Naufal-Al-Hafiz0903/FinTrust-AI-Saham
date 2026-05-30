@@ -1,0 +1,299 @@
+/* FINTRUST LAYOUT V17 CLEAN */
+
+#mode-ipo,
+button#mode-ipo {
+  display: none !important;
+}
+
+.buy-card,
+.alloc-list,
+#pieChart,
+#pieChart__fintrust_dom,
+#pieChart__fintrust_compact,
+[id*="pieChart"] {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.comparison-panel-v17 {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.compare-text-responsive,
+.compare-summary-v17 {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.compare-text-responsive h2,
+.compare-text-responsive p,
+.compare-summary-v17 p {
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  line-height: 1.55 !important;
+}
+
+.compare-stack-v17 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 18px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.chart-card-bar-only-v17 {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  padding: 16px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(145deg, rgba(14, 30, 23, .98), rgba(7, 16, 13, .98)) !important;
+  border: 1px solid rgba(99, 210, 138, .18) !important;
+}
+
+.chart-card-bar-only-v17 canvas#scoreChart {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 260px !important;
+}
+
+.chart-card-bar-only-v17 p {
+  margin: 10px 0 0 !important;
+  color: var(--muted) !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+.recommend-table-wrap-v17 {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  box-sizing: border-box !important;
+  border-radius: 14px !important;
+}
+
+.stock-table-v17 {
+  width: 100% !important;
+  min-width: 780px !important;
+  border-collapse: collapse !important;
+}
+
+.stock-table-v17 th,
+.stock-table-v17 td {
+  vertical-align: top !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+
+@media (max-width: 900px) {
+  .chart-card-bar-only-v17 {
+    padding: 12px !important;
+  }
+
+  .chart-card-bar-only-v17 canvas#scoreChart {
+    height: 220px !important;
+  }
+
+  .stock-table-v17 {
+    min-width: 700px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .compare-stack-v17 {
+    gap: 12px !important;
+  }
+
+  .chart-card-bar-only-v17 {
+    padding: 10px !important;
+    border-radius: 15px !important;
+  }
+
+  .chart-card-bar-only-v17 canvas#scoreChart {
+    height: 200px !important;
+  }
+
+  .chart-card-bar-only-v17 p,
+  .compare-summary-v17 p {
+    font-size: 11px !important;
+  }
+
+  .stock-table-v17 {
+    min-width: 640px !important;
+  }
+}
+
+/* === FINTRUST V18 TABLE DESKTOP FIX === */
+
+/* Area konten dibuat lega di desktop */
+body.is-desktop-ui .main,
+body:not(.is-mobile-ui) .main {
+  min-width: 0 !important;
+}
+
+body.is-desktop-ui .content,
+body:not(.is-mobile-ui) .content {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Panel hasil rekomendasi tetap full dan tidak merusak layout */
+body:not(.is-mobile-ui) #results,
+body:not(.is-mobile-ui) .comparison-panel-v17,
+body:not(.is-mobile-ui) .comparison-panel,
+body:not(.is-mobile-ui) .panel {
+  max-width: none !important;
+}
+
+/* Wrapper tabel: desktop tetap rapi, kalau layar kurang akan scroll horizontal */
+body:not(.is-mobile-ui) #results .table-wrap,
+body:not(.is-mobile-ui) #results .stock-table-wrap,
+body:not(.is-mobile-ui) #results .recommend-table-wrap,
+body:not(.is-mobile-ui) .comparison-panel-v17 .table-wrap,
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table-wrap,
+body:not(.is-mobile-ui) .comparison-panel-v17 .recommend-table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tabel saham: cegah kolom terlalu sempit */
+body:not(.is-mobile-ui) #results table.stock-table,
+body:not(.is-mobile-ui) #results .stock-table,
+body:not(.is-mobile-ui) .comparison-panel-v17 table.stock-table,
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table {
+  width: 100% !important;
+  min-width: 1080px !important;
+  table-layout: fixed !important;
+  border-collapse: separate !important;
+  border-spacing: 0 8px !important;
+}
+
+/* Header dan isi tabel tidak boleh pecah per huruf */
+body:not(.is-mobile-ui) #results .stock-table th,
+body:not(.is-mobile-ui) #results .stock-table td,
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table th,
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table td {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  hyphens: none !important;
+  vertical-align: middle !important;
+  line-height: 1.35 !important;
+  padding: 12px 12px !important;
+  font-size: 13px !important;
+}
+
+/* Lebar kolom rekomendasi saham */
+body:not(.is-mobile-ui) #results .stock-table th:nth-child(1),
+body:not(.is-mobile-ui) #results .stock-table td:nth-child(1),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table th:nth-child(1),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table td:nth-child(1) {
+  width: 64px !important;
+}
+
+body:not(.is-mobile-ui) #results .stock-table th:nth-child(2),
+body:not(.is-mobile-ui) #results .stock-table td:nth-child(2),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table th:nth-child(2),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table td:nth-child(2) {
+  width: 300px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body:not(.is-mobile-ui) #results .stock-table th:nth-child(3),
+body:not(.is-mobile-ui) #results .stock-table td:nth-child(3),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table th:nth-child(3),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table td:nth-child(3) {
+  width: 90px !important;
+}
+
+body:not(.is-mobile-ui) #results .stock-table th:nth-child(4),
+body:not(.is-mobile-ui) #results .stock-table td:nth-child(4),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table th:nth-child(4),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table td:nth-child(4) {
+  width: 82px !important;
+}
+
+body:not(.is-mobile-ui) #results .stock-table th:nth-child(5),
+body:not(.is-mobile-ui) #results .stock-table td:nth-child(5),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table th:nth-child(5),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table td:nth-child(5) {
+  width: 58px !important;
+}
+
+body:not(.is-mobile-ui) #results .stock-table th:nth-child(6),
+body:not(.is-mobile-ui) #results .stock-table td:nth-child(6),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table th:nth-child(6),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table td:nth-child(6) {
+  width: 86px !important;
+  text-align: center !important;
+}
+
+body:not(.is-mobile-ui) #results .stock-table th:nth-child(7),
+body:not(.is-mobile-ui) #results .stock-table td:nth-child(7),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table th:nth-child(7),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table td:nth-child(7) {
+  width: 125px !important;
+}
+
+body:not(.is-mobile-ui) #results .stock-table th:nth-child(8),
+body:not(.is-mobile-ui) #results .stock-table td:nth-child(8),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table th:nth-child(8),
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table td:nth-child(8) {
+  width: 185px !important;
+}
+
+/* Badge BELI/JUAL jangan pecah jadi BEL I */
+body:not(.is-mobile-ui) #results .stock-table .badge,
+body:not(.is-mobile-ui) #results .stock-table .beli,
+body:not(.is-mobile-ui) #results .stock-table .jual,
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table .badge,
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table .beli,
+body:not(.is-mobile-ui) .comparison-panel-v17 .stock-table .jual {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 56px !important;
+  min-height: 42px !important;
+  padding: 8px 12px !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+/* Grafik skor jangan terlalu menekan tabel */
+body:not(.is-mobile-ui) .chart-card-bar-only-v17,
+body:not(.is-mobile-ui) .chart-card.chart-card-bar-only {
+  width: 100% !important;
+  max-width: 100% !important;
+}

@@ -72,7 +72,13 @@ def predict_xgboost(ticker, df):
 
         predicted_class    = int(pred_onx[0][0])
         probabilities_dict = pred_onx[1][0]
-        confidence         = float(probabilities_dict[predicted_class])
+
+        if isinstance(probabilities_dict, dict):
+            confidence = float(probabilities_dict.get(predicted_class,
+                               probabilities_dict.get(float(predicted_class), 0.0)))
+        else:
+            confidence = float(probabilities_dict[predicted_class])                          if predicted_class < len(probabilities_dict) else 0.0
+
         trend_label        = "BULLISH (Naik)" if predicted_class == 1 else "BEARISH (Turun)"
 
         print(json.dumps({

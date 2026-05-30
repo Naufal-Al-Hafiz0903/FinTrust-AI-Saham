@@ -1,0 +1,187 @@
+/* FINTRUST STRUCTURE FINAL V11 */
+
+/* Hapus grafik lingkaran / alokasi beli */
+#pieChart,
+#pieChart__fintrust_dom,
+#pieChart__fintrust_compact,
+.fintrust-hide-pie,
+.chart-box.fintrust-hide-pie,
+.chart-card.fintrust-hide-pie {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* Hapus section rekomendasi pembelian */
+.fintrust-hide-buy-section,
+.fintrust-hide-buy-section * {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* Hapus button IPO / Watchlist saja */
+.fintrust-hide-ipo-watchlist {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* Layout hasil analisis: grafik batang di atas, list saham di bawah */
+.fintrust-result-final {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 14px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.fintrust-result-final > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.fintrust-score-first {
+  order: 1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.fintrust-stock-list-second {
+  order: 2 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Chart card jangan lagi dua kolom */
+.fintrust-score-first,
+.fintrust-score-first .chart-card,
+.fintrust-score-first .chart-box,
+.fintrust-score-first .fintrust-compact-chart,
+.fintrust-score-first .fintrust-dom-chart,
+.fintrust-score-first #scoreChart__fintrust_compact {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Grafik batang tetap compact dan rapi */
+.fintrust-score-first .chart-box {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  padding: 12px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(145deg, rgba(14, 30, 23, .98), rgba(7, 16, 13, .98)) !important;
+  border: 1px solid rgba(99, 210, 138, .18) !important;
+}
+
+.fintrust-score-first .fintrust-compact-bar-list {
+  gap: 7px !important;
+}
+
+.fintrust-score-first .fintrust-compact-bar-row {
+  grid-template-columns: 62px minmax(0, 1fr) 32px !important;
+  gap: 10px !important;
+}
+
+.fintrust-score-first .fintrust-compact-bar-track {
+  height: 10px !important;
+}
+
+.fintrust-score-first .fintrust-chart-caption {
+  display: block !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  margin-top: 8px !important;
+}
+
+/* List saham seperti gambar 4 dibuat satu kolom di bawah grafik */
+.fintrust-stock-list-second {
+  display: block !important;
+}
+
+.fintrust-stock-list-second .stock-mobile-list,
+.fintrust-stock-list-second .recommendation-list,
+.fintrust-stock-list-second .table-wrap,
+.fintrust-stock-list-second table,
+.fintrust-stock-list-second tbody {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Fix teks status BELI agar tidak pecah */
+.fintrust-nowrap-beli {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+}
+
+/* Mobile layout */
+@media (max-width: 768px) {
+  .fintrust-result-final {
+    gap: 10px !important;
+  }
+
+  .fintrust-score-first .chart-box {
+    padding: 9px !important;
+    border-radius: 15px !important;
+  }
+
+  .fintrust-score-first .fintrust-compact-title {
+    font-size: 11px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .fintrust-score-first .fintrust-compact-bar-list {
+    gap: 5px !important;
+  }
+
+  .fintrust-score-first .fintrust-compact-bar-row {
+    grid-template-columns: 48px minmax(0, 1fr) 26px !important;
+    gap: 7px !important;
+  }
+
+  .fintrust-score-first .fintrust-compact-bar-label {
+    font-size: 8.8px !important;
+  }
+
+  .fintrust-score-first .fintrust-compact-bar-track {
+    height: 7px !important;
+  }
+
+  .fintrust-score-first .fintrust-compact-bar-value {
+    font-size: 8px !important;
+  }
+
+  .fintrust-score-first .fintrust-chart-caption {
+    font-size: 8px !important;
+    line-height: 1.3 !important;
+  }
+}

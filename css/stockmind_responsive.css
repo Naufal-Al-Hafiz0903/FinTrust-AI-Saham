@@ -1,0 +1,1891 @@
+/* =====================================================================
+   FINTRUST AI - RESPONSIVE OVERRIDES
+   Revisi: dibuat untuk memastikan layout nyaman di desktop, tablet,
+   mobile web, dan tampilan seperti mobile app.
+   File ini sengaja diload SETELAH inline style agar menjadi override aman.
+   ===================================================================== */
+
+:root {
+  --topbar-h: 56px;
+  --topbar-mobile-h: 54px;
+  --content-max: 1280px;
+  --touch-target: 44px;
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+img, svg, canvas, video, iframe {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  min-width: 0;
+  font: inherit;
+}
+
+button,
+.pill,
+.qpick,
+.nav-item,
+.topbar-btn,
+.menu-toggle,
+.btn,
+.run-btn,
+.btn-submit {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* =====================================================================
+   App shell
+   ===================================================================== */
+
+.app-shell {
+  width: 100%;
+  min-width: 0;
+}
+
+.main,
+.content,
+#results,
+.results,
+.card,
+.panel,
+.hero-main,
+.buy-card,
+.notice-card,
+.alloc-list,
+.compare-grid,
+.chart-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.main {
+  width: 100%;
+}
+
+.content {
+  width: 100%;
+}
+
+.card,
+.panel,
+.hero-main,
+.buy-card,
+.notice-card {
+  overflow-wrap: anywhere;
+}
+
+/* Desktop besar: konten tidak terlalu melebar agar mudah dibaca */
+@media (min-width: 1440px) {
+  .content {
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding-inline: 32px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
+  }
+
+  .agent-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Tablet landscape */
+@media (min-width: 769px) and (max-width: 1180px) {
+  :root {
+    --sidebar-w: 204px;
+  }
+
+  body {
+    overflow: auto;
+  }
+
+  .app-shell {
+    min-height: 100dvh;
+  }
+
+  .sidebar {
+    width: var(--sidebar-w) !important;
+  }
+
+  .sidebar-brand {
+    padding: 20px 14px 16px !important;
+  }
+
+  .brand-name {
+    font-size: 14px !important;
+  }
+
+  .brand-sub {
+    font-size: 10.5px !important;
+  }
+
+  .nav-item {
+    gap: 8px !important;
+    padding: 8px 9px !important;
+    font-size: 12.5px !important;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    padding-inline: 18px !important;
+  }
+
+  .content {
+    padding: 18px 20px !important;
+    gap: 16px !important;
+    overflow: visible !important;
+  }
+
+  .stat-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .input-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .agents,
+  .agent-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .hero,
+  .compare-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reason-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .points {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* =====================================================================
+   Mobile web / mobile-app look
+   ===================================================================== */
+
+@media (max-width: 768px) {
+  body.sidebar-open {
+    overflow: hidden !important;
+  }
+
+  html,
+  body {
+    min-height: 100%;
+    overflow-x: hidden !important;
+  }
+
+  body {
+    overflow-y: auto !important;
+  }
+
+  .app-shell {
+    display: block !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .main {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
+  }
+
+  /* Drawer sidebar */
+  .sidebar {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    width: min(84vw, 292px) !important;
+    max-width: 292px !important;
+    height: 100dvh !important;
+    transform: translateX(-105%) !important;
+    transition: transform .22s ease !important;
+    z-index: 1000 !important;
+    box-shadow: 24px 0 72px rgba(0, 0, 0, .48);
+  }
+
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  .sidebar-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 999 !important;
+    background: rgba(0, 0, 0, .58) !important;
+    backdrop-filter: blur(2px);
+  }
+
+  .sidebar-nav {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-item {
+    min-height: var(--touch-target);
+    font-size: 13.5px !important;
+  }
+
+  /* Topbar stabil, tidak turun ke baris kedua */
+  .topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 80 !important;
+    height: calc(var(--topbar-mobile-h) + var(--safe-top)) !important;
+    min-height: calc(var(--topbar-mobile-h) + var(--safe-top)) !important;
+    padding: var(--safe-top) max(12px, var(--safe-right)) 0 max(12px, var(--safe-left)) !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .topbar-left,
+  .topbar-right {
+    min-width: 0;
+  }
+
+  .topbar-left {
+    flex: 1 1 auto;
+    gap: 8px !important;
+  }
+
+  .topbar-right {
+    flex: 0 0 auto;
+    gap: 6px !important;
+  }
+
+  .menu-toggle {
+    display: inline-flex !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    margin-right: 0 !important;
+  }
+
+  .topbar-title {
+    min-width: 0;
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13.5px !important;
+  }
+
+  .topbar-crumb {
+    display: none !important;
+  }
+
+  .fx-tag {
+    max-width: 34vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10.5px !important;
+    padding: 4px 8px !important;
+  }
+
+  .topbar-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+
+  /* Tombol bell disembunyikan agar topbar tidak penuh */
+  .topbar-right .topbar-btn:nth-of-type(2) {
+    display: none !important;
+  }
+
+  .content {
+    flex: 1 1 auto;
+    padding: 14px max(12px, var(--safe-right)) calc(18px + var(--safe-bottom)) max(12px, var(--safe-left)) !important;
+    gap: 14px !important;
+    overflow: visible !important;
+    max-width: 100vw !important;
+  }
+
+  .page-footer {
+    padding: 12px max(12px, var(--safe-right)) calc(12px + var(--safe-bottom)) max(12px, var(--safe-left)) !important;
+    font-size: 10.5px !important;
+  }
+
+  /* Horizontal scroll area: pills dan quick picks */
+  .market-pills,
+  .quick,
+  .quick-picks,
+  .mode-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .market-pills::-webkit-scrollbar,
+  .quick::-webkit-scrollbar,
+  .quick-picks::-webkit-scrollbar,
+  .mode-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pill,
+  .qpick,
+  .quick button {
+    flex: 0 0 auto;
+    min-height: 34px;
+    white-space: nowrap !important;
+    font-size: 12px !important;
+  }
+
+  .quick span {
+    flex: 0 0 auto;
+    align-self: center;
+  }
+
+  /* Grid utama */
+  .stat-row,
+  .input-grid,
+  .agents,
+  .hero,
+  .agent-grid,
+  .reason-grid,
+  .points,
+  .compare-grid,
+  .metrics,
+  .buy-stat,
+  .xgb-metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .field.full {
+    grid-column: 1 !important;
+  }
+
+  .card,
+  .panel,
+  .hero-main,
+  .buy-card,
+  .notice-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 14px !important;
+    border-radius: 14px !important;
+    overflow-x: hidden !important;
+  }
+
+  .card-header,
+  .topline,
+  .ld-head,
+  .rf-header,
+  .xgb-flex,
+  .xgb-footer-note {
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .topline,
+  .rf-header,
+  .xgb-footer-note {
+    flex-direction: column !important;
+  }
+
+  .company h2,
+  .hero-main h2 {
+    font-size: clamp(18px, 6vw, 22px) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -.03em;
+  }
+
+  .company p,
+  .summary,
+  .buy-note,
+  .compare-note,
+  .reason-grid .card p,
+  .points ul,
+  .agent-result p {
+    font-size: 12.5px !important;
+    line-height: 1.55 !important;
+  }
+
+  .stat {
+    padding: 12px !important;
+  }
+
+  .stat-val {
+    font-size: clamp(16px, 5vw, 19px) !important;
+    overflow-wrap: anywhere;
+  }
+
+  .metric,
+  .buy-stat div,
+  .alloc-item,
+  .agent,
+  .xgb-card,
+  .rf-card {
+    border-radius: 12px !important;
+  }
+
+  .metric b,
+  .buy-stat b {
+    font-size: 15px !important;
+    overflow-wrap: anywhere;
+  }
+
+  .score-wrap {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .score {
+    width: 62px !important;
+    height: 62px !important;
+    font-size: 18px !important;
+    border-width: 5px !important;
+  }
+
+  .score-meta {
+    min-width: 0;
+  }
+
+  .section-title {
+    font-size: 12px !important;
+    margin: 18px 0 8px !important;
+  }
+
+  .notice-card h2 {
+    font-size: 17px !important;
+    line-height: 1.2;
+  }
+
+  /* Form lebih nyaman di mobile: 16px mencegah zoom otomatis iOS */
+  input,
+  select,
+  textarea,
+  .field input,
+  .field select,
+  input.ticker {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+    min-height: var(--touch-target) !important;
+  }
+
+  .btn,
+  .run-btn,
+  .btn-submit {
+    min-height: var(--touch-target) !important;
+    padding: 12px 14px !important;
+    white-space: normal !important;
+  }
+
+  /* Tabel hasil analisis wajib scroll horizontal, bukan memecah layout */
+  #results,
+  #results > *,
+  #comparisonMount,
+  #predictionCard {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .table-wrap,
+  #results .table-wrap,
+  #results [class*="table"]:not(table):not(thead):not(tbody):not(tr):not(th):not(td) {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    border-radius: 10px;
+  }
+
+  .table-wrap * {
+    max-width: none !important;
+  }
+
+  table,
+  .stock-table,
+  #results table {
+    width: max-content !important;
+    min-width: 620px !important;
+    border-collapse: separate;
+  }
+
+  .stock-table th,
+  .stock-table td,
+  #results table th,
+  #results table td {
+    white-space: nowrap !important;
+    font-size: 12px !important;
+    padding: 9px 10px !important;
+  }
+
+  .chart-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .chart-card canvas,
+  #results canvas {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 220px;
+    max-height: 320px;
+  }
+
+  /* Prediksi AI / model card */
+  .rf-trend-box,
+  .rf-title-group {
+    align-items: flex-start !important;
+  }
+
+  .rf-trend-box {
+    gap: 14px !important;
+  }
+
+  .rf-arrow-graphic {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px;
+  }
+
+  .rf-trend-text {
+    font-size: 20px !important;
+  }
+
+  .xgb-card {
+    padding: 16px !important;
+  }
+
+  .xgb-trend {
+    font-size: 22px !important;
+  }
+
+  /* Profile modal yang sebelumnya pakai inline style */
+  #profileModal {
+    padding: 16px !important;
+    align-items: center !important;
+  }
+
+  #profileModal > div {
+    width: min(94vw, 420px) !important;
+    max-width: 94vw !important;
+    max-height: 88dvh !important;
+    overflow-y: auto !important;
+    padding: 22px 18px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Elemen JS yang memakai inline grid/flex */
+  #kl-result > div[style*="grid-template-columns"],
+  #kv-result > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  #results div[style*="justify-content:space-between"],
+  #results div[style*="justify-content: space-between"] {
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding-inline: 10px !important;
+  }
+
+  .card,
+  .panel,
+  .hero-main,
+  .buy-card,
+  .notice-card {
+    padding: 12px !important;
+  }
+
+  .topbar-title {
+    max-width: 38vw;
+  }
+
+  .fx-tag {
+    max-width: 30vw;
+  }
+
+  .stat-label,
+  .stat-change,
+  .field label,
+  .hint {
+    font-size: 11px !important;
+  }
+
+  .badge {
+    padding: 6px 10px !important;
+    font-size: 11.5px !important;
+  }
+
+  table,
+  .stock-table,
+  #results table {
+    min-width: 560px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .topbar {
+    padding-inline: 8px !important;
+  }
+
+  .topbar-title {
+    max-width: 34vw;
+    font-size: 12.5px !important;
+  }
+
+  .fx-tag {
+    display: none !important;
+  }
+
+  .topbar-btn,
+  .menu-toggle {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+  }
+}
+
+/* =====================================================================
+   Auth pages: login/register responsive
+   ===================================================================== */
+
+.page {
+  width: 100%;
+  min-height: 100dvh;
+}
+
+.auth-box {
+  width: min(100%, 420px);
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .page {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    padding: max(18px, var(--safe-top)) max(14px, var(--safe-right)) max(20px, var(--safe-bottom)) max(14px, var(--safe-left)) !important;
+  }
+
+  .auth-box {
+    max-width: 100% !important;
+    margin-inline: auto;
+  }
+
+  .brand {
+    margin: 16px 0 24px !important;
+  }
+
+  .brand-logo {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .brand-name {
+    font-size: 20px !important;
+  }
+
+  .card {
+    padding: 20px 16px !important;
+    border-radius: 16px !important;
+  }
+
+  .card-title {
+    font-size: 15px !important;
+  }
+
+  .card-desc,
+  .switch-link,
+  .forgot-link,
+  .check-row {
+    font-size: 12px !important;
+  }
+
+  .check-row {
+    align-items: flex-start !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .input-wrap input {
+    font-size: 16px !important;
+    min-height: 46px !important;
+  }
+
+  .btn-submit {
+    min-height: 46px !important;
+  }
+
+  .blob {
+    filter: blur(64px) !important;
+    opacity: .11 !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .page {
+    padding-inline: 10px !important;
+  }
+
+  .card {
+    padding-inline: 12px !important;
+  }
+}
+
+
+/* =====================================================================
+   Auth stability fixes
+   ===================================================================== */
+
+.btn-submit:disabled,
+.btn-submit.loading {
+  cursor: wait !important;
+  opacity: .88;
+}
+
+.input-wrap input:-webkit-autofill,
+.input-wrap input:-webkit-autofill:hover,
+.input-wrap input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--bg3) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  caret-color: var(--text) !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay:not(.open) {
+    display: none !important;
+    pointer-events: none !important;
+  }
+
+  .sidebar-overlay.open {
+    display: block !important;
+    pointer-events: auto !important;
+  }
+
+  .sidebar:not(.open) {
+    visibility: hidden;
+  }
+
+  .sidebar.open {
+    visibility: visible;
+  }
+}
+
+/* =====================================================================
+   FINAL DEVICE-AWARE UI MODE OVERRIDE
+   Tujuan: desktop tetap desktop, mobile menjadi mobile-app layout,
+   dan chart/canvas mengikuti lebar layar aktif.
+   ===================================================================== */
+
+html[data-ui-mode="desktop"],
+html[data-ui-mode="tablet"],
+html[data-ui-mode="mobile"] {
+  min-width: 0 !important;
+}
+
+body.is-desktop-ui,
+body.is-tablet-ui,
+body.is-mobile-ui {
+  min-width: 0 !important;
+}
+
+/* Desktop website view */
+@media (min-width: 1025px) {
+  body.is-desktop-ui {
+    overflow: hidden !important;
+  }
+
+  body.is-desktop-ui .app-shell {
+    display: flex !important;
+    flex-direction: row !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  body.is-desktop-ui .sidebar {
+    position: relative !important;
+    inset: auto !important;
+    width: var(--sidebar-w, 230px) !important;
+    max-width: var(--sidebar-w, 230px) !important;
+    height: 100vh !important;
+    transform: none !important;
+    box-shadow: none !important;
+    z-index: 10 !important;
+  }
+
+  body.is-desktop-ui .sidebar-overlay,
+  body.is-desktop-ui .sidebar-overlay.open,
+  body.is-desktop-ui .menu-toggle {
+    display: none !important;
+  }
+
+  body.is-desktop-ui .main {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  body.is-desktop-ui .topbar {
+    height: 56px !important;
+    min-height: 56px !important;
+    padding: 0 24px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+  }
+
+  body.is-desktop-ui .topbar-left,
+  body.is-desktop-ui .topbar-right {
+    min-width: 0 !important;
+    flex-wrap: nowrap !important;
+  }
+
+  body.is-desktop-ui .topbar-title,
+  body.is-desktop-ui .fx-tag {
+    max-width: none !important;
+    white-space: nowrap !important;
+  }
+
+  body.is-desktop-ui .topbar-crumb {
+    display: flex !important;
+  }
+
+  body.is-desktop-ui .topbar-btn {
+    display: flex !important;
+  }
+
+  body.is-desktop-ui .content {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  body.is-desktop-ui .stat-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  body.is-desktop-ui .input-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body.is-desktop-ui .agents {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  body.is-desktop-ui .hero {
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr) !important;
+  }
+
+  body.is-desktop-ui .agent-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  body.is-desktop-ui .reason-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  body.is-desktop-ui .points {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body.is-desktop-ui .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  body.is-desktop-ui .buy-stat,
+  body.is-desktop-ui .xgb-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body.is-desktop-ui .compare-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr) !important;
+    gap: 18px !important;
+    align-items: start !important;
+  }
+
+  body.is-desktop-ui .chart-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    overflow: visible !important;
+  }
+
+  body.is-desktop-ui .chart-card canvas {
+    width: 100% !important;
+    min-height: 260px !important;
+    max-height: 320px !important;
+  }
+}
+
+/* Tablet view: desktop structure, reduced density */
+@media (min-width: 769px) and (max-width: 1024px) {
+  body.is-tablet-ui {
+    overflow: hidden !important;
+  }
+
+  body.is-tablet-ui .app-shell {
+    display: flex !important;
+    flex-direction: row !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  body.is-tablet-ui .sidebar {
+    position: relative !important;
+    width: 204px !important;
+    max-width: 204px !important;
+    height: 100dvh !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  body.is-tablet-ui .sidebar-overlay,
+  body.is-tablet-ui .menu-toggle {
+    display: none !important;
+  }
+
+  body.is-tablet-ui .main {
+    min-width: 0 !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  body.is-tablet-ui .topbar {
+    flex-wrap: nowrap !important;
+    height: 56px !important;
+  }
+
+  body.is-tablet-ui .content {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 18px !important;
+  }
+
+  body.is-tablet-ui .input-grid,
+  body.is-tablet-ui .stat-row,
+  body.is-tablet-ui .agents,
+  body.is-tablet-ui .metrics,
+  body.is-tablet-ui .buy-stat,
+  body.is-tablet-ui .xgb-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body.is-tablet-ui .hero,
+  body.is-tablet-ui .compare-grid,
+  body.is-tablet-ui .agent-grid,
+  body.is-tablet-ui .reason-grid,
+  body.is-tablet-ui .points {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.is-tablet-ui .chart-card {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+}
+
+/* Mobile app view */
+@media (max-width: 768px) {
+  body.is-mobile-ui {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  body.is-mobile-ui .app-shell {
+    display: block !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: 100dvh !important;
+    overflow-x: hidden !important;
+  }
+
+  body.is-mobile-ui .sidebar {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    width: min(86vw, 300px) !important;
+    max-width: 300px !important;
+    height: 100dvh !important;
+    transform: translate3d(-105%, 0, 0) !important;
+    transition: transform .24s ease !important;
+    z-index: 1000 !important;
+  }
+
+  body.is-mobile-ui .sidebar.open {
+    transform: translate3d(0, 0, 0) !important;
+  }
+
+  body.is-mobile-ui .sidebar-overlay.open {
+    display: block !important;
+    z-index: 999 !important;
+  }
+
+  body.is-mobile-ui .main {
+    width: 100vw !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
+  }
+
+  body.is-mobile-ui .topbar {
+    position: sticky !important;
+    top: 0 !important;
+    height: calc(54px + var(--safe-top, 0px)) !important;
+    min-height: calc(54px + var(--safe-top, 0px)) !important;
+    padding: var(--safe-top, 0px) 10px 0 10px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  body.is-mobile-ui .topbar-left {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  body.is-mobile-ui .topbar-right {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    gap: 6px !important;
+  }
+
+  body.is-mobile-ui .menu-toggle {
+    display: inline-flex !important;
+    flex: 0 0 38px !important;
+  }
+
+  body.is-mobile-ui .topbar-title {
+    max-width: 40vw !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  body.is-mobile-ui .topbar-crumb {
+    display: none !important;
+  }
+
+  body.is-mobile-ui .fx-tag {
+    max-width: 32vw !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  body.is-mobile-ui .topbar-right .topbar-btn:nth-of-type(2) {
+    display: none !important;
+  }
+
+  body.is-mobile-ui .content {
+    width: 100% !important;
+    padding: 12px 10px calc(18px + var(--safe-bottom, 0px)) !important;
+    gap: 12px !important;
+    overflow: visible !important;
+  }
+
+  body.is-mobile-ui .stat-row,
+  body.is-mobile-ui .input-grid,
+  body.is-mobile-ui .agents,
+  body.is-mobile-ui .hero,
+  body.is-mobile-ui .agent-grid,
+  body.is-mobile-ui .reason-grid,
+  body.is-mobile-ui .points,
+  body.is-mobile-ui .compare-grid,
+  body.is-mobile-ui .metrics,
+  body.is-mobile-ui .buy-stat,
+  body.is-mobile-ui .xgb-metrics-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  body.is-mobile-ui .card,
+  body.is-mobile-ui .panel,
+  body.is-mobile-ui .hero-main,
+  body.is-mobile-ui .buy-card,
+  body.is-mobile-ui .notice-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+    overflow-x: hidden !important;
+  }
+
+  body.is-mobile-ui .market-pills,
+  body.is-mobile-ui .quick,
+  body.is-mobile-ui .quick-picks,
+  body.is-mobile-ui .mode-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  body.is-mobile-ui .pill,
+  body.is-mobile-ui .qpick,
+  body.is-mobile-ui .quick button {
+    flex: 0 0 auto !important;
+  }
+
+  body.is-mobile-ui input,
+  body.is-mobile-ui select,
+  body.is-mobile-ui textarea {
+    font-size: 16px !important;
+  }
+
+  body.is-mobile-ui .table-wrap {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  body.is-mobile-ui .stock-table,
+  body.is-mobile-ui #results table {
+    width: max-content !important;
+    min-width: 620px !important;
+  }
+
+  body.is-mobile-ui .chart-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  body.is-mobile-ui .chart-card canvas {
+    width: 100% !important;
+    min-height: 240px !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  body.is-mobile-ui #kl-result > div[style*="grid-template-columns"],
+  body.is-mobile-ui #kv-result > div[style*="grid-template-columns"],
+  body.is-mobile-ui #sm-page-overlay div[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.is-mobile-ui #sm-page-overlay div[style*="justify-content:space-between"],
+  body.is-mobile-ui #sm-page-overlay div[style*="justify-content: space-between"],
+  body.is-mobile-ui #results div[style*="justify-content:space-between"],
+  body.is-mobile-ui #results div[style*="justify-content: space-between"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+}
+
+@media (max-width: 380px) {
+  body.is-mobile-ui .topbar-title {
+    max-width: 34vw !important;
+  }
+  body.is-mobile-ui .fx-tag {
+    display: none !important;
+  }
+  body.is-mobile-ui .stock-table,
+  body.is-mobile-ui #results table {
+    min-width: 560px !important;
+  }
+}
+
+
+/* =========================================================
+   FINTRUST MOBILE REAL UI FIX v20260529-compact-charts
+   Tujuan: mobile benar-benar memakai layout mobile, bukan desktop yang diperkecil.
+   ========================================================= */
+.stock-mobile-list {
+  display: none;
+}
+.chart-box {
+  min-width: 0;
+  width: 100%;
+}
+.chart-box canvas,
+.chart-card canvas {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  background: var(--panel2, rgba(255,255,255,.04));
+  border: 1px solid var(--line, rgba(255,255,255,.10));
+  border-radius: 16px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+.chart-box p,
+.chart-card p {
+  margin: 8px 0 0;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  html,
+  body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body.is-mobile-ui .content,
+  .content {
+    max-width: 100vw !important;
+  }
+
+  body.is-mobile-ui .compare-grid,
+  .compare-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  body.is-mobile-ui .stock-table-wrap,
+  body.is-mobile-ui .table-wrap.stock-table-wrap {
+    display: none !important;
+  }
+
+  body.is-mobile-ui .stock-mobile-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  body.is-mobile-ui .stock-mobile-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 11px !important;
+    border: 1px solid var(--line, rgba(255,255,255,.10));
+    border-radius: 14px;
+    background: rgba(255,255,255,.035);
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  body.is-mobile-ui .stock-mobile-head {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  body.is-mobile-ui .stock-mobile-head b {
+    display: block;
+    color: var(--text, #e6f0e8);
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  body.is-mobile-ui .stock-mobile-head span:not(.badge) {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--muted, #95aa9b);
+    font-size: 11px;
+    line-height: 1.25;
+    margin-top: 2px;
+  }
+
+  body.is-mobile-ui .stock-mobile-head .badge {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 10.5px;
+    padding: 5px 7px;
+  }
+
+  body.is-mobile-ui .stock-mobile-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  body.is-mobile-ui .stock-mobile-grid div {
+    min-width: 0;
+    padding: 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.04);
+  }
+
+  body.is-mobile-ui .stock-mobile-grid small {
+    display: block;
+    color: var(--muted, #95aa9b);
+    font-size: 10px;
+    line-height: 1.2;
+    margin-bottom: 3px;
+  }
+
+  body.is-mobile-ui .stock-mobile-grid strong {
+    display: block;
+    color: var(--text, #e6f0e8);
+    font-size: 11.5px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  body.is-mobile-ui .stock-mobile-card p {
+    margin: 9px 0 0 !important;
+    color: var(--muted, #95aa9b);
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  body.is-mobile-ui .chart-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  body.is-mobile-ui .chart-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.is-mobile-ui .chart-box canvas,
+  body.is-mobile-ui .chart-card canvas,
+  body.is-mobile-ui #scoreChart,
+  body.is-mobile-ui #pieChart {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    max-height: 360px !important;
+    border-radius: 14px !important;
+    padding: 6px !important;
+  }
+
+  body.is-mobile-ui .chart-score-box canvas,
+  body.is-mobile-ui #scoreChart {
+    height: 210px;
+  }
+
+  body.is-mobile-ui .chart-allocation-box canvas,
+  body.is-mobile-ui #pieChart {
+    height: 240px;
+  }
+
+  body.is-mobile-ui .chart-box p,
+  body.is-mobile-ui .chart-card p {
+    font-size: 11.5px !important;
+    color: var(--muted, #95aa9b);
+  }
+
+  body.is-mobile-ui .alloc-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  body.is-mobile-ui .alloc-item {
+    padding: 10px !important;
+    border-radius: 12px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  body.is-mobile-ui .stock-mobile-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.is-mobile-ui .chart-score-box canvas,
+  body.is-mobile-ui #scoreChart {
+    height: 190px;
+  }
+
+  body.is-mobile-ui .chart-allocation-box canvas,
+  body.is-mobile-ui #pieChart {
+    height: 220px;
+  }
+}
+
+/* =========================================================
+   FINTRUST ANALYSIS FLOW FIX v20260529-market-analysis
+   - Compact comparison based on actual container width, not only media query.
+   - Mobile prediction tabs and Prophet table become card/list when narrow.
+   ========================================================= */
+.comparison-panel,
+.prediction-card,
+#predictionContainerMount {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.comparison-panel.is-compact .compare-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+.comparison-panel.is-compact .stock-table-wrap {
+  display: none !important;
+}
+
+.comparison-panel.is-compact .stock-mobile-list {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+.comparison-panel.is-compact .chart-card {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+.comparison-panel.is-compact .chart-box,
+.comparison-panel.is-compact .chart-box canvas,
+.comparison-panel.is-compact #scoreChart,
+.comparison-panel.is-compact #pieChart {
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+.prediction-tabs {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  max-width: 100%;
+}
+
+.prediction-tabs.is-compact,
+body.is-mobile-ui .prediction-tabs {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+.prediction-tabs.is-compact .pill,
+body.is-mobile-ui .prediction-tabs .pill {
+  width: 100% !important;
+  min-height: 42px !important;
+  justify-content: center !important;
+}
+
+.prophet-mobile-list {
+  display: none;
+}
+
+body.is-mobile-ui .prediction-table-wrap,
+.prediction-card.is-compact .prediction-table-wrap,
+#predictionContainerMount.is-compact .prediction-table-wrap {
+  display: none !important;
+}
+
+body.is-mobile-ui .prophet-mobile-list,
+.prediction-card.is-compact .prophet-mobile-list,
+#predictionContainerMount.is-compact .prophet-mobile-list {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+}
+
+body.is-mobile-ui .xgb-card,
+body.is-mobile-ui .xgb-box,
+body.is-mobile-ui .xgb-proj,
+body.is-mobile-ui .prediction-card,
+body.is-mobile-ui #predictionContainerMount,
+.prediction-card.is-compact .xgb-card,
+.prediction-card.is-compact .xgb-box,
+.prediction-card.is-compact .xgb-proj {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-wrap: anywhere !important;
+}
+
+body.is-mobile-ui .xgb-flex,
+.prediction-card.is-compact .xgb-flex {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 4px !important;
+}
+
+body.is-mobile-ui .rf-trend-box,
+.prediction-card.is-compact .rf-trend-box {
+  gap: 12px !important;
+}
+
+body.is-mobile-ui .rf-trend-text,
+.prediction-card.is-compact .rf-trend-text,
+body.is-mobile-ui .xgb-trend,
+.prediction-card.is-compact .xgb-trend {
+  font-size: 20px !important;
+  line-height: 1.2 !important;
+}
+
+/* =========================================================
+   FINTRUST CHART ADAPTIVE FIX v20260529-chart-final
+   - Semua grafik hasil analisis mengikuti lebar container asli.
+   - Mobile: canvas tidak boleh memakai min-height besar / padding yang membuat isi terpotong.
+   ========================================================= */
+.chart-box,
+.chart-card,
+.comparison-panel,
+.compare-grid {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.chart-box canvas,
+.chart-card canvas,
+#scoreChart,
+#pieChart {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  background: var(--panel2, rgba(255,255,255,.04));
+  border: 1px solid var(--line, rgba(255,255,255,.10));
+  border-radius: 14px;
+}
+
+@media (max-width: 768px) {
+  body.is-mobile-ui .comparison-panel,
+  body.is-mobile-ui .compare-grid,
+  body.is-mobile-ui .chart-card,
+  body.is-mobile-ui .chart-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.is-mobile-ui .chart-card {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  body.is-mobile-ui .chart-box canvas,
+  body.is-mobile-ui #scoreChart,
+  body.is-mobile-ui #pieChart,
+  .comparison-panel.is-compact .chart-box canvas,
+  .comparison-panel.is-compact #scoreChart,
+  .comparison-panel.is-compact #pieChart {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    max-height: 300px !important;
+    padding: 0 !important;
+  }
+
+  body.is-mobile-ui .chart-score-box canvas,
+  body.is-mobile-ui #scoreChart,
+  .comparison-panel.is-compact .chart-score-box canvas,
+  .comparison-panel.is-compact #scoreChart {
+    height: 230px !important;
+  }
+
+  body.is-mobile-ui .chart-allocation-box canvas,
+  body.is-mobile-ui #pieChart,
+  .comparison-panel.is-compact .chart-allocation-box canvas,
+  .comparison-panel.is-compact #pieChart {
+    height: 215px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  body.is-mobile-ui .chart-score-box canvas,
+  body.is-mobile-ui #scoreChart,
+  .comparison-panel.is-compact .chart-score-box canvas,
+  .comparison-panel.is-compact #scoreChart {
+    height: 215px !important;
+  }
+
+  body.is-mobile-ui .chart-allocation-box canvas,
+  body.is-mobile-ui #pieChart,
+  .comparison-panel.is-compact .chart-allocation-box canvas,
+  .comparison-panel.is-compact #pieChart {
+    height: 205px !important;
+  }
+}
+
+
+/* FINTRUST ROOT HOTFIX UI POLISH START */
+:root {
+  --fintrust-card-bg: rgba(17, 32, 24, .92);
+  --fintrust-card-border: rgba(112, 211, 146, .18);
+}
+
+.chart-card,
+.chart-box {
+  min-width: 0 !important;
+}
+
+.chart-box {
+  background: linear-gradient(145deg, rgba(17,32,24,.96), rgba(10,18,15,.96)) !important;
+  border: 1px solid var(--fintrust-card-border) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 16px 36px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.035) !important;
+  padding: 12px !important;
+  overflow: hidden !important;
+}
+
+.chart-box > p {
+  color: rgba(218, 235, 224, .72) !important;
+  font-size: 11.5px !important;
+  line-height: 1.45 !important;
+  margin: 8px 2px 0 !important;
+}
+
+.chart-box canvas,
+#scoreChart,
+#pieChart {
+  background: radial-gradient(circle at top right, rgba(99,210,138,.10), rgba(255,255,255,.025) 42%, rgba(255,255,255,.015)) !important;
+  border: 1px solid rgba(255,255,255,.06) !important;
+  border-radius: 14px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  display: block !important;
+}
+
+@media (max-width: 768px) {
+  body.is-mobile-ui .content,
+  body.is-mobile-ui main,
+  body.is-mobile-ui .main,
+  body.is-mobile-ui .workspace,
+  body.is-mobile-ui .page,
+  body.is-mobile-ui .panel,
+  body.is-mobile-ui .card,
+  body.is-mobile-ui .comparison-panel,
+  body.is-mobile-ui .compare-grid,
+  body.is-mobile-ui .chart-card,
+  body.is-mobile-ui .chart-box {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  body.is-mobile-ui .comparison-panel {
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  body.is-mobile-ui .compare-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  body.is-mobile-ui .chart-card {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  body.is-mobile-ui .chart-box {
+    padding: 10px !important;
+    border-radius: 16px !important;
+  }
+
+  body.is-mobile-ui #scoreChart {
+    height: 330px !important;
+    max-height: 390px !important;
+  }
+
+  body.is-mobile-ui #pieChart {
+    height: 310px !important;
+    max-height: 360px !important;
+  }
+
+  body.is-mobile-ui .chart-box > p {
+    font-size: 10.5px !important;
+    margin-top: 7px !important;
+  }
+
+  body.is-mobile-ui .alloc-list,
+  body.is-mobile-ui .stock-mobile-list {
+    display: grid !important;
+    gap: 10px !important;
+  }
+}
+/* FINTRUST ROOT HOTFIX UI POLISH END */
+
+
+/* =========================================================
+   FINTRUST STRUCTURE FINAL V16
+   - Hapus IPO/Watchlist
+   - Hapus pie chart
+   - Layout: teks -> grafik batang -> tabel
+   ========================================================= */
+
+#mode-ipo {
+  display: none !important;
+}
+
+.compare-grid,
+.compare-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+  align-items: stretch !important;
+}
+
+.compare-summary {
+  width: 100%;
+}
+
+.chart-card.chart-card-bar-only {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 16px;
+  border-radius: 18px;
+}
+
+.chart-card.chart-card-bar-only canvas#scoreChart {
+  display: block !important;
+  width: 100% !important;
+  height: 260px !important;
+  max-width: 100% !important;
+}
+
+#pieChart {
+  display: none !important;
+}
+
+.chart-card.chart-card-bar-only p,
+.compare-summary .compare-note,
+.comparison-panel-v16 .compare-note {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.recommend-table-wrap,
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stock-table {
+  width: 100%;
+  min-width: 780px;
+}
+
+.stock-table th,
+.stock-table td {
+  vertical-align: top;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.alloc-list,
+.buy-card .alloc-list,
+.section-title + .alloc-list {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .chart-card.chart-card-bar-only canvas#scoreChart {
+    height: 220px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .market-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chart-card.chart-card-bar-only {
+    padding: 12px;
+  }
+
+  .chart-card.chart-card-bar-only canvas#scoreChart {
+    height: 200px !important;
+  }
+
+  .stock-table {
+    min-width: 680px;
+  }
+}

@@ -1,0 +1,100 @@
+/* FINTRUST MOBILE STRICT LAYOUT V4 */
+@media (max-width: 768px) {
+  html,
+  body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body,
+  .app,
+  .app-shell,
+  .content,
+  .main,
+  main,
+  .workspace,
+  .page,
+  .results,
+  .result-area,
+  .panel,
+  .card,
+  .comparison-panel,
+  .compare-grid,
+  .chart-card,
+  .chart-box {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .content,
+  .main,
+  main,
+  .workspace,
+  .page {
+    width: 100% !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    overflow-x: hidden !important;
+  }
+
+  .comparison-panel,
+  .panel,
+  .card {
+    width: 100% !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+  }
+
+  .compare-grid,
+  .chart-card {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .chart-box {
+    width: 100% !important;
+    max-width: calc(100vw - 22px) !important;
+    overflow: hidden !important;
+    padding: 10px !important;
+    border-radius: 16px !important;
+    background: linear-gradient(145deg, rgba(17,32,24,.98), rgba(8,17,14,.98)) !important;
+    border: 1px solid rgba(99,210,138,.18) !important;
+  }
+
+  .chart-box canvas,
+  #scoreChart,
+  #pieChart {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    border-radius: 13px !important;
+    background: radial-gradient(circle at top right, rgba(99,210,138,.10), rgba(255,255,255,.025) 42%, rgba(255,255,255,.01)) !important;
+  }
+
+  #scoreChart {
+    height: 330px !important;
+  }
+
+  #pieChart {
+    height: 280px !important;
+  }
+
+  .stock-table-wrap,
+  .table-wrap {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+  }
+
+  .stock-mobile-list,
+  .alloc-list {
+    display: grid !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+}

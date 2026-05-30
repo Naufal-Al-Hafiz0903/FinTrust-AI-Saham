@@ -1,0 +1,305 @@
+/* FINTRUST TERMINAL LAYOUT V13 */
+
+#fintrust-terminal-stack-v13 {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 16px !important;
+  margin-top: 16px !important;
+  box-sizing: border-box !important;
+}
+
+.fintrust-v13-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  background: linear-gradient(145deg, rgba(18, 35, 28, .98), rgba(7, 17, 14, .98)) !important;
+  border: 1px solid rgba(99, 210, 138, .22) !important;
+  border-radius: 18px !important;
+  padding: 18px !important;
+  overflow: hidden !important;
+}
+
+.fintrust-v13-title {
+  margin: 0 0 10px !important;
+  color: #f3f7fb !important;
+  font-size: 22px !important;
+  line-height: 1.25 !important;
+  font-weight: 850 !important;
+  letter-spacing: -.02em !important;
+}
+
+.fintrust-v13-desc,
+.fintrust-v13-meta {
+  margin: 0 0 8px !important;
+  color: rgba(220, 242, 226, .86) !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+
+.fintrust-v13-meta {
+  color: rgba(158, 207, 176, .86) !important;
+  font-size: 13px !important;
+}
+
+/* GRAFIK BATANG */
+.fintrust-v13-chart-title,
+.fintrust-v13-table-title {
+  margin: 0 0 14px !important;
+  color: #f3f7fb !important;
+  font-size: 18px !important;
+  line-height: 1.25 !important;
+  font-weight: 850 !important;
+}
+
+.fintrust-v13-bar-list {
+  display: grid !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+.fintrust-v13-bar-row {
+  display: grid !important;
+  grid-template-columns: 72px minmax(0, 1fr) 38px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.fintrust-v13-bar-label {
+  min-width: 0 !important;
+  color: #eaf6ee !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 850 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.fintrust-v13-bar-track {
+  width: 100% !important;
+  height: 12px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, .10) !important;
+}
+
+.fintrust-v13-bar-fill {
+  display: block !important;
+  width: var(--score, 0%) !important;
+  min-width: 5px !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  border-radius: 999px !important;
+  background: #63d28a !important;
+  box-shadow: 0 0 18px rgba(99, 210, 138, .18) !important;
+}
+
+.fintrust-v13-bar-fill.mid {
+  background: #e2c45d !important;
+}
+
+.fintrust-v13-bar-fill.low {
+  background: #ee7777 !important;
+}
+
+.fintrust-v13-bar-value {
+  color: rgba(234, 246, 238, .76) !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-weight: 850 !important;
+  text-align: right !important;
+}
+
+.fintrust-v13-caption {
+  margin: 12px 0 0 !important;
+  color: rgba(234, 246, 238, .62) !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* TABEL REKOMENDASI BELI */
+.fintrust-v13-table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  border-radius: 14px !important;
+}
+
+.fintrust-v13-table {
+  width: 100% !important;
+  min-width: 760px !important;
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
+  color: #eaf6ee !important;
+}
+
+.fintrust-v13-table th {
+  padding: 12px 10px !important;
+  color: #9ecfb0 !important;
+  background: rgba(255,255,255,.035) !important;
+  border-bottom: 1px solid rgba(99,210,138,.18) !important;
+  text-align: left !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+  font-weight: 850 !important;
+}
+
+.fintrust-v13-table td {
+  padding: 13px 10px !important;
+  color: #eaf6ee !important;
+  border-bottom: 1px solid rgba(255,255,255,.065) !important;
+  vertical-align: top !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+
+.fintrust-v13-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 54px !important;
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  color: #07160e !important;
+  background: #63d28a !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.fintrust-v13-empty {
+  color: rgba(234,246,238,.72) !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* SEMBUNYIKAN FUNGSI LAMA */
+.fintrust-v13-hide,
+.fintrust-v13-hide * {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+#pieChart,
+#pieChart__fintrust_dom,
+#pieChart__fintrust_compact,
+[id*="pieChart"] {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+/* BUTTON IPO/WATCHLIST */
+.fintrust-v13-hide-tab {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  #fintrust-terminal-stack-v13 {
+    gap: 12px !important;
+    margin-top: 12px !important;
+  }
+
+  .fintrust-v13-card {
+    padding: 12px !important;
+    border-radius: 15px !important;
+  }
+
+  .fintrust-v13-title {
+    font-size: 17px !important;
+    line-height: 1.3 !important;
+  }
+
+  .fintrust-v13-desc,
+  .fintrust-v13-meta {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+
+  .fintrust-v13-chart-title,
+  .fintrust-v13-table-title {
+    font-size: 15px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .fintrust-v13-bar-list {
+    gap: 7px !important;
+  }
+
+  .fintrust-v13-bar-row {
+    grid-template-columns: 52px minmax(0, 1fr) 28px !important;
+    gap: 8px !important;
+  }
+
+  .fintrust-v13-bar-label {
+    font-size: 10px !important;
+  }
+
+  .fintrust-v13-bar-track {
+    height: 8px !important;
+  }
+
+  .fintrust-v13-bar-value {
+    font-size: 9px !important;
+  }
+
+  .fintrust-v13-caption {
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+    margin-top: 8px !important;
+  }
+
+  .fintrust-v13-table {
+    min-width: 620px !important;
+  }
+
+  .fintrust-v13-table th,
+  .fintrust-v13-table td {
+    padding: 10px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .fintrust-v13-badge {
+    min-width: 46px !important;
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+  }
+}

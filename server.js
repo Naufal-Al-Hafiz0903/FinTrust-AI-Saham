@@ -29,6 +29,54 @@ const groqApiKey = getGroqKey();
 const client = groqApiKey ? new Groq({ apiKey: groqApiKey }) : null;
 const CACHE_TTL_MS = 60_000;
 const cache = new Map();
+const SERVER_TIMEOUT = {
+  yahooQuote: 9000,
+  yahooBatch: 14000,
+  fx: 9000,
+  groq: 45000,
+  historical: 16000,
+};
+
+function withTimeout(promise, timeoutMs, label = "Proses") {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} melewati batas waktu ${Math.round(timeoutMs / 1000)} detik`)), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+async function fetchJsonWithTimeout(url, timeoutMs, label = "Fetch") {
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    const response = await fetch(url, { signal: controller?.signal });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(data?.error || data?.message || `${label} gagal (${response.status})`);
+    return data;
+  } catch (err) {
+    if (err?.name === "AbortError") throw new Error(`${label} melewati batas waktu ${Math.round(timeoutMs / 1000)} detik`);
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function mapLimit(items, limit, mapper) {
+  const results = new Array(items.length);
+  let index = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (index < items.length) {
+      const current = index++;
+      try {
+        results[current] = { status: "fulfilled", value: await mapper(items[current], current) };
+      } catch (reason) {
+        results[current] = { status: "rejected", reason };
+      }
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
 
 function safeNumber(v) {
   const n = Number(v);
@@ -85,7 +133,7 @@ async function getUsdIdrRate() {
 
     for (const symbol of symbols) {
       try {
-        const q = await yf.quote(symbol);
+        const q = await withTimeout(yf.quote(symbol), SERVER_TIMEOUT.fx, `Kurs ${symbol}`);
         const rate = safeNumber(q.regularMarketPrice ?? q.regularMarketPreviousClose);
         if (rate && rate > 0) {
           return {
@@ -115,7 +163,7 @@ async function getStockData(ticker, market = "idx") {
   const key = `stock:${market}:${symbol}`;
 
   return cached(key, async () => {
-    const q = await yf.quote(symbol);
+    const q = await withTimeout(yf.quote(symbol), SERVER_TIMEOUT.yahooQuote, `Harga ${symbol}`);
     const price = safeNumber(q.regularMarketPrice ?? q.regularMarketPreviousClose);
     if (!price || price <= 0) throw new Error(`Harga ${symbol} tidak tersedia`);
 
@@ -171,10 +219,28 @@ app.get("/api/health", (req, res) => {
 
 app.get("/api/fx/usdidr", async (req, res) => {
   try {
-    const fx = await getUsdIdrRate();
-    res.json(fx);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const yahoo = await getUsdIdrRate();
+    res.json({ ...yahoo, fetchedAt: yahoo.fetchedAt || new Date().toISOString() });
+  } catch (primaryErr) {
+    try {
+      const data = await fetchJsonWithTimeout("https://open.er-api.com/v6/latest/USD", SERVER_TIMEOUT.fx, "Kurs ER-API");
+      const rate = safeNumber(data?.rates?.IDR);
+      if (!rate || rate <= 0) throw new Error("Data kurs ER-API tidak valid");
+      const previous = rate;
+      res.json({
+        symbol: "USDIDR=X",
+        rate,
+        USDIDR: rate,
+        previousClose: previous,
+        regularMarketChange: null,
+        regularMarketChangePercent: null,
+        fetchedAt: new Date().toISOString(),
+        source: "ER-API fallback"
+      });
+    } catch (fallbackErr) {
+      console.error("USDIDR API ERROR:", primaryErr.message, "| fallback:", fallbackErr.message);
+      res.status(503).json({ error: primaryErr.message || fallbackErr.message || "Kurs USD/IDR realtime tidak tersedia" });
+    }
   }
 });
 
@@ -182,7 +248,7 @@ app.get("/api/market/ihsg", async (req, res) => {
   try {
     const data = await cached("market:IHSG", async () => {
       // Fetch quote untuk harga & change
-      const q = await yf.quote("^JKSE");
+      const q = await withTimeout(yf.quote("^JKSE"), SERVER_TIMEOUT.yahooQuote, "Data IHSG");
       const price = safeNumber(q.regularMarketPrice ?? q.regularMarketPreviousClose);
       if (!price || price <= 0) throw new Error("Data IHSG tidak tersedia");
 
@@ -191,7 +257,7 @@ app.get("/api/market/ihsg", async (req, res) => {
       if (!volume) {
         try {
           const period1 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 hari lalu
-          const chart = await yf.chart("^JKSE", { interval: "1d", period1 });
+          const chart = await withTimeout(yf.chart("^JKSE", { interval: "1d", period1 }), SERVER_TIMEOUT.historical, "Volume IHSG");
           const quotes = chart?.quotes || [];
           // Ambil volume dari hari terakhir yang ada datanya
           for (let i = quotes.length - 1; i >= 0; i--) {
@@ -243,7 +309,7 @@ app.post("/api/stocks", async (req, res) => {
     const clean = [...new Set(tickers.map(cleanTicker).filter(Boolean))].slice(0, 120);
     if (!clean.length) throw new Error("Ticker pembanding belum diisi");
 
-    const results = await Promise.allSettled(clean.map(t => getStockData(t, market)));
+    const results = await mapLimit(clean, 8, (t) => withTimeout(getStockData(t, market), SERVER_TIMEOUT.yahooBatch, `Harga ${t}`));
     const stocks = [];
     const errors = [];
 
@@ -303,7 +369,7 @@ PROMPT:
 ${prompt}
 `;
 
-    const response = await client.chat.completions.create({
+    const response = await withTimeout(client.chat.completions.create({
       model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: system },
@@ -311,7 +377,7 @@ ${prompt}
       ],
       temperature: 0.2,
       response_format: { type: "json_object" }
-    });
+    }), SERVER_TIMEOUT.groq, "Groq AI");
 
     const content = response.choices?.[0]?.message?.content;
     if (!content) throw new Error("Groq tidak mengembalikan content");
@@ -329,7 +395,7 @@ async function fetchHistoricalData(symbol, period = "1y") {
   const periodMap = { "1y": 365, "2y": 730, "6mo": 180 };
   const days = periodMap[period] || 365;
   const period1 = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const result = await yf.chart(symbol, { interval: "1d", period1 });
+  const result = await withTimeout(yf.chart(symbol, { interval: "1d", period1 }), SERVER_TIMEOUT.historical, `Data historis ${symbol}`);
   const quotes = result?.quotes || [];
   if (!quotes.length) throw new Error(`Data historis ${symbol} tidak tersedia`);
   return quotes.map(q => ({
@@ -423,6 +489,37 @@ app.get("/api/predict/:ticker", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
+// ENDPOINT AKSES PREDIKSI CRYPTO V3 
+app.post("/api/predict_crypto", async (req, res) => {
+  const { ticker, model } = req.body;
+  
+  if (!ticker || !model) {
+      return res.status(400).json({ error: "Ticker dan model tidak boleh kosong" });
+  }
+
+  const symbol = ticker.includes("-") ? ticker : `${ticker}-USD`;
+
+  try {
+
+    const historicalData = await fetchHistoricalData(symbol, "2y");
+
+    const scriptPath = path.join(__dirname, "predict_crypto.py");
+    
+    const result = await runPythonWithData(scriptPath, { 
+        ticker: symbol, 
+        model: model,
+        data: historicalData 
+    }, 60_000);
+
+    res.json(result);
+  } catch (err) {
+    console.error(`[CRYPTO CONTAINER API] Error:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // MULTI-MODEL PREDICTIONS (XGBoost, Random Forest)
 app.get("/api/predict/:model/:ticker", async (req, res) => {

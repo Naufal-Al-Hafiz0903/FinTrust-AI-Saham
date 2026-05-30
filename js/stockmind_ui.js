@@ -4,6 +4,42 @@ const API_STOCK_URL = `${API_BASE}/api/stock`;
 const API_STOCKS_URL = `${API_BASE}/api/stocks`;
 const API_FX_URL = `${API_BASE}/api/fx/usdidr`;
 const WEIGHTS = {fundamental: .35, technical: .25, sentiment: .20, risk: .20};
+const REQUEST_TIMEOUT = {
+  fx: 12000,
+  stock: 14000,
+  stocks: 26000,
+  ai: 55000,
+  predictionFast: 70000,
+  predictionSlow: 135000
+};
+
+function timeoutMessage(ms, label = 'Request') {
+  return `${label} melewati batas waktu ${Math.round(ms / 1000)} detik. Coba ulang, cek koneksi, atau kurangi jumlah ticker.`;
+}
+
+async function fetchJson(url, options = {}, timeoutMs = 15000, label = 'Request') {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    const res = await fetch(url, { ...options, signal: controller?.signal });
+    const text = await res.text();
+    let data = null;
+    if (text) {
+      try { data = JSON.parse(text); }
+      catch (_) { data = { error: text.slice(0, 500) }; }
+    }
+    if (!res.ok) {
+      const msg = data?.error || data?.message || data?.details || `${label} gagal (${res.status})`;
+      throw new Error(msg);
+    }
+    return data || {};
+  } catch (err) {
+    if (err?.name === 'AbortError') throw new Error(timeoutMessage(timeoutMs, label));
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 const GLOBAL_HINTS = new Set(['AAPL','MSFT','NVDA','TSLA','GOOGL','GOOG','AMZN','META','BRK-B','NFLX','AMD','INTC','AVGO','ORCL','TSM','JPM','BAC','V','MA','UNH','JNJ','PFE','KO','PEP','WMT','COST','XOM','CVX','SHEL','NKE','DIS','ADBE','CRM','SHOP','BABA','MELI','RIVN','NIO']);
 const UNIVERSE = {
   idx: {
@@ -49,6 +85,139 @@ let market = 'idx';
 let lastStockData = null;
 let lastFx = null;
 let aiFallbackUsed = false;
+
+let lastComparisonChartState = { items: null, allocs: null };
+let chartRedrawTimer = null;
+
+function responsiveViewportWidth() {
+  const vals = [
+    window.visualViewport?.width,
+    document.documentElement?.clientWidth,
+    window.innerWidth,
+    document.body?.clientWidth
+  ].map(Number).filter(v => Number.isFinite(v) && v > 0);
+  return vals.length ? Math.min(...vals) : 1024;
+}
+
+function elementWidth(node) {
+  if (!node) return 0;
+  const rect = node.getBoundingClientRect ? node.getBoundingClientRect() : null;
+  return Math.floor(rect?.width || node.clientWidth || 0);
+}
+
+function effectiveElementWidth(node) {
+  const parent = node?.closest?.('.chart-box, .chart-card, .comparison-panel, .panel, .card, .content') || node?.parentElement || node;
+  const isCanvas = String(node?.tagName || '').toLowerCase() === 'canvas';
+  const candidates = [
+    isCanvas ? 0 : elementWidth(node),
+    elementWidth(parent),
+    elementWidth(node?.parentElement),
+    elementWidth(node?.closest?.('.chart-card')),
+    elementWidth(node?.closest?.('.comparison-panel')),
+    elementWidth(node?.closest?.('.content')),
+    responsiveViewportWidth()
+  ].map(Number).filter(v => Number.isFinite(v) && v > 0);
+  if (!candidates.length) return 320;
+  const realistic = candidates.filter(v => v >= 180);
+  return Math.floor(Math.min(...(realistic.length ? realistic : candidates)));
+}
+
+function compactModeForElement(node, breakpoint = 560) {
+  const w = effectiveElementWidth(node);
+  const panelW = elementWidth(node?.closest?.('.comparison-panel')) || w;
+  const chartW = elementWidth(node?.closest?.('.chart-box')) || w;
+  const viewportW = responsiveViewportWidth();
+  const rootMode = document.documentElement?.dataset?.uiMode;
+  const body = document.body?.classList;
+  const mobileMq = window.matchMedia ? window.matchMedia('(max-width: 768px)').matches : false;
+
+  return rootMode === 'mobile'
+    || body?.contains('is-mobile-ui')
+    || mobileMq
+    || viewportW <= 768
+    || w <= breakpoint
+    || panelW <= Math.max(620, breakpoint)
+    || chartW <= breakpoint;
+}
+
+function currentUiMode() {
+  const rootMode = document.documentElement?.dataset?.uiMode;
+  const w = responsiveViewportWidth();
+  const body = document.body?.classList;
+  if (rootMode === 'mobile' || body?.contains('is-mobile-ui') || w <= 768 || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches)) return 'mobile';
+  if (rootMode === 'tablet' || body?.contains('is-tablet-ui') || w <= 1024 || (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches)) return 'tablet';
+  return 'desktop';
+}
+
+function isMobileUi() {
+  return currentUiMode() === 'mobile';
+}
+
+function clampChartHeight(value, min, max) {
+  return Math.max(min, Math.min(max, Math.floor(value || min)));
+}
+
+function syncAdaptiveResults() {
+  document.querySelectorAll('[data-fintrust-comparison]').forEach(panel => {
+    panel.classList.toggle('is-compact', compactModeForElement(panel, 680));
+  });
+  document.querySelectorAll('#predictionContainerMount, .prediction-card').forEach(panel => {
+    panel.classList.toggle('is-compact', compactModeForElement(panel, 680));
+  });
+  document.querySelectorAll('.mode-row').forEach(row => {
+    row.classList.toggle('is-compact', compactModeForElement(row, 560));
+  });
+  document.dispatchEvent(new CustomEvent('fintrust:contentchange'));
+}
+
+function prepareResponsiveCanvas(cv, desiredHeight, compactOverride = null) {
+  if (!cv) return null;
+  const parent = cv.closest('.chart-box') || cv.parentElement || cv;
+  const compact = compactOverride ?? compactModeForElement(cv, 560);
+  const measuredW = effectiveElementWidth(cv);
+  const viewportW = responsiveViewportWidth();
+  const maxW = compact ? Math.min(680, Math.max(220, viewportW - 16)) : Math.max(320, viewportW - 48);
+  const width = compact ? Math.max(220, Math.min(measuredW, maxW)) : Math.max(300, Math.min(measuredW, maxW));
+  const height = compact ? clampChartHeight(desiredHeight, 160, 300) : clampChartHeight(desiredHeight, 240, 360);
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+
+  cv.style.setProperty('display', 'block', 'important');
+  cv.style.setProperty('width', '100%', 'important');
+  cv.style.setProperty('max-width', '100%', 'important');
+  cv.style.setProperty('height', `${height}px`, 'important');
+  cv.style.setProperty('min-height', '0', 'important');
+  cv.style.setProperty('max-height', `${height}px`, 'important');
+  cv.style.setProperty('padding', '0', 'important');
+  cv.style.setProperty('box-sizing', 'border-box', 'important');
+  parent.style.setProperty('min-width', '0', 'important');
+  parent.style.setProperty('max-width', '100%', 'important');
+  parent.style.setProperty('overflow', 'hidden', 'important');
+
+  cv.width = Math.floor(width * ratio);
+  cv.height = Math.floor(height * ratio);
+
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  ctx.textBaseline = 'alphabetic';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  return { ctx, cw: width, ch: height, compact };
+}
+
+function redrawComparisonCharts() {
+  syncAdaptiveResults();
+  if (!lastComparisonChartState.items || !lastComparisonChartState.allocs) return;
+  drawBarChart('scoreChart', lastComparisonChartState.items); }
+
+function scheduleChartRedraw(delay = 120) {
+  clearTimeout(chartRedrawTimer);
+  chartRedrawTimer = setTimeout(redrawComparisonCharts, delay);
+}
+
+window.addEventListener('resize', () => scheduleChartRedraw(160));
+window.addEventListener('orientationchange', () => scheduleChartRedraw(260));
+document.addEventListener('fintrust:modechange', () => scheduleChartRedraw(120));
 
 const el = id => document.getElementById(id);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
@@ -132,13 +301,13 @@ function fxText() {
 
 async function refreshFx() {
   try {
-    const r = await fetch(API_FX_URL);
-    if(!r.ok) throw new Error((await r.json()).error || 'Kurs gagal diambil');
-    lastFx = await r.json();
-    el('fxTag').textContent = `USD/IDR ${fmtNum(fxRate(), 2)}`;
+    lastFx = await fetchJson(API_FX_URL, {}, REQUEST_TIMEOUT.fx, 'Kurs USD/IDR');
+    const tag = el('fxTag');
+    if (tag) tag.textContent = fxRate() ? `USD/IDR ${fmtNum(fxRate(), 2)}` : 'Kurs belum tersedia';
     return lastFx;
   } catch(e) {
-    el('fxTag').textContent = 'Kurs belum tersedia';
+    const tag = el('fxTag');
+    if (tag) tag.textContent = 'Kurs belum tersedia';
     return null;
   }
 }
@@ -221,9 +390,7 @@ const SYS = {
 
 async function fetchStock(ticker) {
   if(market === 'ipo') return null;
-  const r = await fetch(`${API_STOCK_URL}/${encodeURIComponent(ticker)}?market=${market}`);
-  if(!r.ok) throw new Error((await r.json()).error || 'Market data gagal');
-  const d = await r.json();
+  const d = await fetchJson(`${API_STOCK_URL}/${encodeURIComponent(ticker)}?market=${market}`, {}, REQUEST_TIMEOUT.stock, `Market data ${ticker}`);
   lastStockData = d.stock || null;
   lastFx = d.fx || lastFx;
   return d.stock || null;
@@ -232,25 +399,17 @@ async function fetchStock(ticker) {
 async function fetchStocks(tickers) {
   if(market === 'ipo') return { stocks: [], errors: [], fx: null };
   const body = { market, tickers: unique(tickers) };
-  const r = await fetch(API_STOCKS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if(!r.ok) throw new Error((await r.json()).error || 'Market data gagal');
-  const d = await r.json();
+  const d = await fetchJson(API_STOCKS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, REQUEST_TIMEOUT.stocks, 'Market data pembanding');
   lastFx = d.fx || lastFx;
   return d;
 }
 
 async function callAI(system, prompt, ticker) {
-  const r = await fetch(API_ANALYZE_URL, {
+  const d = await fetchJson(API_ANALYZE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ system, prompt, ticker, market, nominal: parseAmount(el('amountIn').value), nominalCurrency: el('currencyIn').value })
-  });
-  if(!r.ok) {
-    let m = 'Backend AI gagal';
-    try { m = (await r.json()).error || m; } catch(_) { m = await r.text(); }
-    throw new Error(m);
-  }
-  const d = await r.json();
+  }, REQUEST_TIMEOUT.ai, `AI agent ${ticker}`);
   if(d.stock) lastStockData = d.stock;
   if(d.fx) lastFx = d.fx;
   if(!d.content) throw new Error('Response AI kosong');
@@ -490,46 +649,189 @@ function makeAllocations(items) {
 }
 
 function drawBarChart(id, items) {
-  const cv = el(id); if(!cv) return;
-  const ctx = cv.getContext('2d'), ratio = devicePixelRatio || 1, w = cv.width = cv.clientWidth * ratio, h = cv.height = cv.clientHeight * ratio;
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0); ctx.clearRect(0, 0, w, h);
-  const cw = cv.clientWidth, ch = cv.clientHeight, p = 34, barW = (cw - p * 2) / Math.max(items.length, 1) * .58;
-  ctx.fillStyle = '#95aa9b'; ctx.font = '12px Segoe UI'; ctx.fillText('Composite Score', p, 22);
-  items.forEach((it, i) => {
-    const x = p + i * ((cw - p * 2) / items.length) + barW * .35, y = ch - p - (it.scoreData.score / 100) * (ch - p * 2);
-    ctx.fillStyle = it.scoreData.score >= 62 ? '#62c482' : it.scoreData.score >= 42 ? '#d7b95c' : '#e06a6a';
-    ctx.fillRect(x, y, barW, ch - p - y);
-    ctx.fillStyle = '#e6f0e8'; ctx.fillText(it.ticker, x, ch - 12); ctx.fillText(String(it.scoreData.score), x, y - 6);
+  const cv = el(id);
+  if (!cv) return;
+  const list = (Array.isArray(items) ? items : []).slice(0, 12);
+  const mobile = compactModeForElement(cv, 620);
+  const desiredHeight = mobile
+    ? clampChartHeight(50 + Math.max(list.length, 1) * 26, 170, 270)
+    : Math.max(260, list.length > 10 ? 330 : 280);
+  const canvas = prepareResponsiveCanvas(cv, desiredHeight, mobile);
+  if (!canvas) return;
+  const { ctx, cw, ch } = canvas;
+  const palette = {
+    text: '#e6f0e8',
+    muted: '#95aa9b',
+    dim: '#5f7467',
+    grid: 'rgba(149,170,155,0.14)',
+    panel: 'rgba(255,255,255,0.065)',
+    green: '#62c482',
+    yellow: '#d7b95c',
+    red: '#e06a6a'
+  };
+
+  ctx.fillStyle = palette.text;
+  ctx.font = mobile ? '600 12px Segoe UI' : '600 13px Segoe UI';
+  ctx.textAlign = 'left';
+  ctx.fillText('Composite Score', 14, 24);
+
+  if (!list.length) {
+    ctx.fillStyle = palette.dim;
+    ctx.font = '12px Segoe UI';
+    ctx.fillText('Data grafik belum tersedia', 14, 52);
+    return;
+  }
+
+  if (mobile) {
+    const left = 12;
+    const top = 42;
+    const right = 10;
+    const labelW = Math.min(56, Math.max(40, cw * 0.22));
+    const scoreW = 28;
+    const gap = 7;
+    const barMax = Math.max(72, cw - left - right - labelW - scoreW - gap * 2);
+    const availableH = Math.max(90, ch - top - 12);
+    const rowH = Math.max(22, Math.min(30, availableH / list.length));
+
+    list.forEach((it, i) => {
+      const score = clamp(Number(it?.scoreData?.score || 0), 0, 100);
+      const y = top + i * rowH;
+      const color = score >= 62 ? palette.green : score >= 42 ? palette.yellow : palette.red;
+      const barH = Math.max(8, Math.min(13, rowH * .44));
+      const barY = y + Math.max(5, (rowH - barH) / 2);
+      const label = String(it?.ticker || '-').replace('.JK', '').slice(0, 8);
+
+      ctx.fillStyle = palette.text;
+      ctx.font = '600 10.5px Segoe UI';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, left, barY + barH - 2);
+
+      ctx.fillStyle = palette.panel;
+      ctx.fillRect(left + labelW + gap, barY, barMax, barH);
+      ctx.fillStyle = color;
+      ctx.fillRect(left + labelW + gap, barY, Math.max(2, barMax * score / 100), barH);
+
+      ctx.fillStyle = palette.muted;
+      ctx.font = '10.5px Segoe UI';
+      ctx.textAlign = 'right';
+      ctx.fillText(String(Math.round(score)), cw - right, barY + barH - 2);
+    });
+    ctx.textAlign = 'left';
+    return;
+  }
+
+  const p = 38;
+  const span = Math.max(1, list.length);
+  const step = (cw - p * 2) / span;
+  const barW = Math.max(12, Math.min(36, step * .56));
+  const chartBottom = ch - 42;
+  const chartTop = 44;
+  const chartH = Math.max(80, chartBottom - chartTop);
+
+  ctx.strokeStyle = palette.grid;
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = chartBottom - (chartH * i / 4);
+    ctx.beginPath();
+    ctx.moveTo(p, y);
+    ctx.lineTo(cw - p, y);
+    ctx.stroke();
+  }
+
+  list.forEach((it, i) => {
+    const score = clamp(Number(it?.scoreData?.score || 0), 0, 100);
+    const x = p + i * step + (step - barW) / 2;
+    const y = chartBottom - (score / 100) * chartH;
+    ctx.fillStyle = score >= 62 ? palette.green : score >= 42 ? palette.yellow : palette.red;
+    ctx.fillRect(x, y, barW, chartBottom - y);
+
+    ctx.fillStyle = palette.text;
+    ctx.font = '11px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(Math.round(score)), x + barW / 2, Math.max(38, y - 6));
+    ctx.fillStyle = palette.muted;
+    ctx.fillText(String(it?.ticker || '-').replace('.JK', '').slice(0, 8), x + barW / 2, ch - 14);
   });
+  ctx.textAlign = 'left';
 }
 
 function drawPieChart(id, items, allocs) {
-  const cv = el(id); if(!cv) return;
-  const ctx = cv.getContext('2d'), ratio = devicePixelRatio || 1, w = cv.width = cv.clientWidth * ratio, h = cv.height = cv.clientHeight * ratio;
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0); ctx.clearRect(0, 0, w, h);
-  const cw = cv.clientWidth, ch = cv.clientHeight, cx = cw / 2, cy = ch / 2 - 5, r = Math.min(cw, ch) * .28;
-  const buy = items.map((it, i) => ({ label: it.ticker, value: allocs[i]?.used || 0 })).filter(x => x.value > 0);
+  const cv = el(id);
+  if (!cv) return;
+  const buy = (Array.isArray(items) ? items : [])
+    .map((it, i) => ({ label: String(it.ticker || '-').replace('.JK', ''), value: Number(allocs?.[i]?.used || 0) }))
+    .filter(x => x.value > 0);
   const total = buy.reduce((s, x) => s + x.value, 0);
-  let data = total > 0 ? buy : [{ label: 'Cash / tidak beli', value: 1 }];
+  const data = total > 0 ? buy.slice(0, 6) : [{ label: 'Cash / tidak beli', value: 1 }];
+  const mobile = compactModeForElement(cv, 620);
+  const desiredHeight = mobile ? clampChartHeight(138 + data.length * 16, 185, 255) : 280;
+  const canvas = prepareResponsiveCanvas(cv, desiredHeight, mobile);
+  if (!canvas) return;
+  const { ctx, cw, ch } = canvas;
+  const colors = ['#62c482', '#6ea8ff', '#d7b95c', '#e06a6a', '#95aa9b', '#b48cff'];
+
+  ctx.fillStyle = '#e6f0e8';
+  ctx.font = mobile ? '600 12px Segoe UI' : '600 13px Segoe UI';
+  ctx.textAlign = 'left';
+  ctx.fillText(total > 0 ? 'Alokasi beli' : 'Tidak ada alokasi beli', 14, 24);
+
+  const sum = data.reduce((s, x) => s + x.value, 0) || 1;
+  const cx = mobile ? Math.max(68, Math.min(cw * 0.32, cw - 78)) : cw / 2;
+  const cy = mobile ? 82 : ch / 2 - 8;
+  const r = mobile ? Math.min(48, Math.max(34, cw * 0.17), (ch - 86) / 2) : Math.min(cw, ch) * .26;
   let start = -Math.PI / 2;
+
   data.forEach((d, i) => {
-    const sum = data.reduce((s, x) => s + x.value, 0), end = start + (d.value / sum) * Math.PI * 2;
-    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, start, end); ctx.closePath();
-    ctx.fillStyle = ['#62c482', '#6ea8ff', '#d7b95c', '#e06a6a', '#95aa9b', '#b48cff'][i % 6]; ctx.fill(); start = end;
+    const end = start + (d.value / sum) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    start = end;
   });
-  ctx.fillStyle = '#e6f0e8'; ctx.font = '13px Segoe UI'; ctx.fillText(total > 0 ? 'Alokasi beli' : 'Tidak ada alokasi beli', 20, 24);
-  ctx.font = '12px Segoe UI';
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, Math.max(14, r * .48), 0, Math.PI * 2);
+  ctx.fillStyle = '#112018';
+  ctx.fill();
+
+  ctx.font = mobile ? '10.5px Segoe UI' : '12px Segoe UI';
+  if (mobile) {
+    const legendLeft = cw > 310 ? Math.min(cx + r + 18, cw * 0.58) : 14;
+    const legendTop = cw > 310 ? Math.max(52, cy - r + 8) : cy + r + 24;
+    data.forEach((d, i) => {
+      const y = legendTop + i * 17;
+      if (y > ch - 8) return;
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.fillRect(legendLeft, y - 9, 9, 9);
+      ctx.fillStyle = '#95aa9b';
+      ctx.textAlign = 'left';
+      const label = String(d.label || '-');
+      ctx.fillText(label.length > 18 ? label.slice(0, 16) + '…' : label, legendLeft + 15, y);
+    });
+    return;
+  }
+
   data.forEach((d, i) => {
-    ctx.fillStyle = ['#62c482', '#6ea8ff', '#d7b95c', '#e06a6a', '#95aa9b', '#b48cff'][i % 6]; ctx.fillRect(20, 44 + i * 20, 10, 10);
-    ctx.fillStyle = '#95aa9b'; ctx.fillText(d.label, 36, 54 + i * 20);
+    const y = 44 + i * 20;
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fillRect(20, y, 10, 10);
+    ctx.fillStyle = '#95aa9b';
+    ctx.textAlign = 'left';
+    ctx.fillText(String(d.label || '-'), 36, y + 10);
   });
 }
 
 function renderComparison(title, subtitle, items, errors = []) {
   const allocs = makeAllocations(items);
+  lastComparisonChartState = { items, allocs };
+  window.__fintrustChartState = lastComparisonChartState;
   el('results').innerHTML = TemplateUI.comparison(title, subtitle, items, allocs, errors, fxText(), clsVerdict, esc, fmtNum, fmtMoney, affordability);
   el('results').style.display = 'block';
-  setTimeout(() => { drawBarChart('scoreChart', items); drawPieChart('pieChart', items, allocs); }, 50);
+  syncAdaptiveResults();
+  setTimeout(() => requestAnimationFrame(() => { syncAdaptiveResults(); drawBarChart('scoreChart', items); }), 180);
   window.scrollTo({ top: el('results').offsetTop - 15, behavior: 'smooth' });
 }
 
@@ -545,16 +847,19 @@ async function runRecommendation() {
   if(!ranked.length) throw new Error('Data saham realtime tidak tersedia untuk cakupan ini.');
   const nominal = parseAmount(el('amountIn').value), label = market === 'global' ? 'Saham Luar Negeri' : 'Saham Indonesia', scope = group === '__all__' ? 'Semua Sektor' : group;
   const affordable = ranked.filter(it => it.aff.canBuy).slice(0, 12);
-  const available = ranked.map(it => ({ ticker: it.ticker, minCost: it.aff.minCost, currency: it.aff.currency, unit: it.aff.unit })).filter(x => x.minCost > 0);
+  const displayItems = (affordable.length ? affordable : ranked).slice(0, 12);
+  const buyCount = displayItems.filter(x => x.scoreData.verdict === 'BELI' && x.aff.canBuy).length;
+
   if(!affordable.length) {
-    showWarn(`<b>Nominal belum cukup</b>Tidak ada saham ${label} dalam cakupan ${scope} yang mampu dibeli dengan nominal ${fmtMoney(nominal, el('currencyIn').value)} berdasarkan harga realtime.`);
-    el('results').innerHTML = TemplateUI.noAffordable(label, scope, available, esc, fmtMoney);
-    el('results').style.display = 'block'; return;
+    showWarn(`<b>Nominal belum cukup</b>Belum ada saham ${label} dalam cakupan ${scope} yang mampu dibeli dengan nominal ${fmtMoney(nominal, el('currencyIn').value)}. Grafik skor dan diagram cash tetap ditampilkan agar hasil screening tetap terlihat.`);
+  } else if(!buyCount) {
+    showWarn(`<b>Belum ada rekomendasi BELI</b>Nominal cukup untuk beberapa saham, tetapi scoring belum menemukan saham yang layak dibeli saat ini.`);
   }
-  const buyCount = affordable.filter(x => x.scoreData.verdict === 'BELI').length;
-  if(!buyCount) showWarn(`<b>Belum ada rekomendasi BELI</b>Nominal cukup untuk beberapa saham, tetapi scoring belum menemukan saham yang layak dibeli saat ini.`);
-  const subtitle = `Rekomendasi otomatis berdasarkan ${label}, cakupan ${scope}, nominal ${fmtMoney(nominal, el('currencyIn').value)}, dan harga realtime. Hanya saham yang mampu dibeli yang ditampilkan.`;
-  renderComparison(`Rekomendasi ${label} · ${scope}`, subtitle, affordable, d.errors || []);
+
+  const subtitle = affordable.length
+    ? `Rekomendasi otomatis berdasarkan ${label}, cakupan ${scope}, nominal ${fmtMoney(nominal, el('currencyIn').value)}, dan harga realtime. Hanya saham yang mampu dibeli yang ditampilkan.`
+    : `Screening otomatis berdasarkan ${label}, cakupan ${scope}, dan nominal ${fmtMoney(nominal, el('currencyIn').value)}. Karena nominal belum cukup, alokasi pembelian ditampilkan sebagai cash / tidak beli.`;
+  renderComparison(`Rekomendasi ${label} · ${scope}`, subtitle, displayItems, d.errors || []);
 }
 
 async function renderPeerComparison(ticker) {
@@ -569,8 +874,11 @@ async function renderPeerComparison(ticker) {
     if(items.length < 2) return;
     const subtitle = parseAmount(el('amountIn').value) ? `Pembanding sektor ${info.sector}. Nominal dipakai hanya untuk saham yang mampu dibeli dan statusnya BELI.` : `Pembanding sektor ${info.sector}. Nominal belum diisi, jadi tidak ada alokasi beli.`;
     const allocs = makeAllocations(items);
+    lastComparisonChartState = { items, allocs };
+    window.__fintrustChartState = lastComparisonChartState;
     el('comparisonMount').innerHTML = TemplateUI.comparison(`Pembanding ${info.sector}`, subtitle, items, allocs, d.errors || [], fxText(), clsVerdict, esc, fmtNum, fmtMoney, affordability);
-    setTimeout(() => { drawBarChart('scoreChart', items); drawPieChart('pieChart', items, allocs); }, 50);
+    syncAdaptiveResults();
+    setTimeout(() => requestAnimationFrame(() => { syncAdaptiveResults(); drawBarChart('scoreChart', items); }), 180);
   } catch(e) {
     el('comparisonMount').innerHTML = TemplateUI.peerError(e.message, esc);
   }
@@ -682,7 +990,8 @@ window.renderPredictionView = function(model, ticker) {
 
 async function runPredictions(ticker) {
   try {
-    const elMount = document.getElementById('comparisonMount'); 
+    const elMount = document.getElementById('comparisonMount');
+    if (!elMount?.parentNode) return;
     const oldContainer = document.getElementById('predictionContainerMount');
     if (oldContainer) oldContainer.remove();
 
@@ -690,37 +999,33 @@ async function runPredictions(ticker) {
     predContainer.id = 'predictionContainerMount';
     predContainer.innerHTML = TemplateUI.predictionContainer(ticker);
     elMount.parentNode.insertBefore(predContainer, elMount);
+    syncAdaptiveResults();
 
-    // Reset cache & tampilkan loading di card aktif (xgboost default)
     predictionData = { prophet: null, xgboost: null, randomforest: null };
     const card = document.getElementById('predictionCard');
-    if (card) card.innerHTML = `<p class="compare-note" style="color:var(--text2);">⏳ Menjalankan model AI... (Prophet ±30 detik, XGBoost & RF lebih cepat)</p>`;
+    if (card) card.innerHTML = `<p class="compare-note" style="color:var(--text2);">Menjalankan model AI. XGBoost dan Random Forest akan tampil lebih dulu, Prophet bisa lebih lama.</p>`;
 
-    // Fetch ketiga model secara paralel, masing-masing independen
-    const fetchModel = async (url, key) => {
+    const fetchModel = async (url, key, timeoutMs) => {
       try {
-        const r = await fetch(url);
-        const data = await r.json();
-        predictionData[key] = data;
+        predictionData[key] = await fetchJson(url, {}, timeoutMs, `Prediksi ${key.toUpperCase()}`);
       } catch (e) {
-        predictionData[key] = { error: `Koneksi gagal: ${e.message}` };
+        predictionData[key] = { error: e.message };
       }
-      // Render ulang jika model yang sedang aktif sudah selesai
       const activeBtn = document.querySelector('[id^="btn-"].on');
       const activeModel = activeBtn ? activeBtn.id.replace('btn-', '') : 'xgboost';
       if (activeModel === key) window.renderPredictionView(key, ticker);
     };
 
-    // Jalankan paralel - XGBoost & RF cepat, Prophet lebih lambat
-    await Promise.all([
-      fetchModel(`${API_BASE}/api/predict/${encodeURIComponent(ticker)}?market=${market}`, 'prophet'),
-      fetchModel(`${API_BASE}/api/predict/xgboost/${encodeURIComponent(ticker)}?market=${market}`, 'xgboost'),
-      fetchModel(`${API_BASE}/api/predict/randomforest/${encodeURIComponent(ticker)}?market=${market}`, 'randomforest')
-    ]);
+    const jobs = [
+      fetchModel(`${API_BASE}/api/predict/xgboost/${encodeURIComponent(ticker)}?market=${market}`, 'xgboost', REQUEST_TIMEOUT.predictionFast),
+      fetchModel(`${API_BASE}/api/predict/randomforest/${encodeURIComponent(ticker)}?market=${market}`, 'randomforest', REQUEST_TIMEOUT.predictionFast),
+      fetchModel(`${API_BASE}/api/predict/${encodeURIComponent(ticker)}?market=${market}`, 'prophet', REQUEST_TIMEOUT.predictionSlow)
+    ];
 
-    // Final render setelah semua selesai
-    window.renderPredictionView('xgboost', ticker);
-
+    await Promise.allSettled(jobs);
+    const activeBtn = document.querySelector('[id^="btn-"].on');
+    const activeModel = activeBtn ? activeBtn.id.replace('btn-', '') : 'xgboost';
+    window.renderPredictionView(activeModel, ticker);
   } catch (e) {
     console.warn("Prediksi Multimodel gagal:", e);
     const card = document.getElementById('predictionCard');
@@ -771,7 +1076,7 @@ async function runSingle(ticker) {
     el('pb').style.width = '100%';
     render(ticker, ar, final, stock);
     if(aiFallbackUsed) showWarn('<b>Sebagian agent memakai fallback lokal</b>Cek GROQ_API_KEY jika ingin analisis AI penuh.');
-    await runPredictions(ticker);
+    runPredictions(ticker).catch(err => console.warn('Prediksi berjalan di background gagal:', err));
   } catch(e) {
     aiFallbackUsed = true;
     let final = finalFallback(ticker, ar, comp, stock);
@@ -780,7 +1085,7 @@ async function runSingle(ticker) {
     el('pb').style.width = '100%';
     render(ticker, ar, final, stock);
     showWarn('<b>Groq belum aktif atau API key tidak valid</b>Hasil tetap ditampilkan memakai fallback lokal dan data Yahoo Finance.');
-    await runPredictions(ticker);
+    runPredictions(ticker).catch(err => console.warn('Prediksi berjalan di background gagal:', err));
   }
   
   await renderPeerComparison(ticker.replace('.JK', ''));
@@ -813,7 +1118,11 @@ async function run() {
 el('tickerIn').addEventListener('keydown', e => { if(e.key === 'Enter') run(); });
 renderSector();
 renderQuick();
-refreshFx();/* ═══════════════════════════════════════════════════════════════
+refreshFx();
+syncAdaptiveResults();
+window.addEventListener('resize', () => syncAdaptiveResults(), { passive: true });
+document.addEventListener('fintrust:modechange', () => syncAdaptiveResults());
+/* ═══════════════════════════════════════════════════════════════
    STOCKMIND AI — FITUR TAMBAHAN
    Watchlist · Riwayat · Disimpan · Kalkulator Lot · Konversi Kurs · Berita Pasar
    Inject ke stockmind_ui.js (append di akhir file)
@@ -1241,8 +1550,7 @@ async function refreshKonversi() {
   const info = el('kurs-rate-info');
   if (info) info.innerHTML = `<i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Memuat kurs realtime...`;
   try {
-    const r = await fetch('/api/fx/usdidr');
-    const d = await r.json();
+    const d = await fetchJson('/api/fx/usdidr', {}, REQUEST_TIMEOUT.fx, 'Kurs konversi');
     const usdIdr = d.rate || d.USDIDR || 16000;
     // Approx rates vs USD (update real jika API tersedia)
     _kursRates = { USD: 1, IDR: usdIdr, SGD: 0.74, EUR: 0.92, GBP: 0.79, JPY: 157, MYR: 4.68, AUD: 1.55 };
@@ -1485,8 +1793,7 @@ async function dbGetHistory() {
   const uid = getCurrentUserId();
   if (!uid) return storageGet(SM_HISTORY);
   try {
-    const r = await fetch(`auth/analysis.php?type=history&user_id=${uid}`);
-    const d = await r.json();
+    const d = await fetchJson(`auth/analysis.php?type=history&user_id=${uid}`, {}, 10000, 'Riwayat analisis');
     return d.success ? d.data : storageGet(SM_HISTORY);
   } catch { return storageGet(SM_HISTORY); }
 }
@@ -1495,24 +1802,23 @@ async function dbAddHistory(entry) {
   const uid = getCurrentUserId();
   if (!uid) { const h=storageGet(SM_HISTORY); h.unshift({...entry,id:Date.now()}); storageSet(SM_HISTORY,h.slice(0,50)); return; }
   try {
-    await fetch(`auth/analysis.php?type=history&user_id=${uid}`, {
+    await fetchJson(`auth/analysis.php?type=history&user_id=${uid}`, {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(entry)
-    });
+    }, 10000, 'Simpan riwayat');
   } catch {}
 }
 
 async function dbClearHistory() {
   const uid = getCurrentUserId();
   if (!uid) { storageSet(SM_HISTORY,[]); return; }
-  try { await fetch(`auth/analysis.php?type=history&user_id=${uid}`, {method:'DELETE'}); } catch {}
+  try { await fetchJson(`auth/analysis.php?type=history&user_id=${uid}`, {method:'DELETE'}, 10000, 'Hapus riwayat'); } catch {}
 }
 
 async function dbGetSaved() {
   const uid = getCurrentUserId();
   if (!uid) return storageGet(SM_SAVED);
   try {
-    const r = await fetch(`auth/analysis.php?type=saved&user_id=${uid}`);
-    const d = await r.json();
+    const d = await fetchJson(`auth/analysis.php?type=saved&user_id=${uid}`, {}, 10000, 'Analisis tersimpan');
     return d.success ? d.data : storageGet(SM_SAVED);
   } catch { return storageGet(SM_SAVED); }
 }
@@ -1521,16 +1827,16 @@ async function dbAddSaved(entry) {
   const uid = getCurrentUserId();
   if (!uid) { const s=storageGet(SM_SAVED); s.unshift({...entry,id:Date.now(),savedAt:new Date().toISOString()}); storageSet(SM_SAVED,s.slice(0,100)); return; }
   try {
-    await fetch(`auth/analysis.php?type=saved&user_id=${uid}`, {
+    await fetchJson(`auth/analysis.php?type=saved&user_id=${uid}`, {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(entry)
-    });
+    }, 10000, 'Simpan analisis');
   } catch {}
 }
 
 async function dbDeleteSaved(id) {
   const uid = getCurrentUserId();
   if (!uid) { storageSet(SM_SAVED, storageGet(SM_SAVED).filter(x=>x.id!=id)); return; }
-  try { await fetch(`auth/analysis.php?type=saved&user_id=${uid}&id=${id}`, {method:'DELETE'}); } catch {}
+  try { await fetchJson(`auth/analysis.php?type=saved&user_id=${uid}&id=${id}`, {method:'DELETE'}, 10000, 'Hapus analisis tersimpan'); } catch {}
 }
 
 /* ────────────────────────────────────────────
@@ -1571,3 +1877,92 @@ window.renderDisimpanPage = async function(container) {
   const empty = '<div style="text-align:center;padding:40px;color:var(--text3);"><i class="ti ti-bookmark" style="font-size:40px;display:block;margin-bottom:12px;"></i><div>Belum ada analisis tersimpan</div></div>';
   container.innerHTML = '<div class="card"><div class="card-header"><div class="card-title"><i class="ti ti-bookmark"></i> Analisis Disimpan</div></div>'+(list.length===0?empty:'<div style="display:flex;flex-direction:column;gap:8px;">'+rows+'</div>')+'</div>';
 };
+
+
+/* =================================================================
+   LOGIKA EKSEKUSI PREDIKSI CRYPTO (KONTAINER TERPISAH)
+   ================================================================= */
+async function runCryptoContainerPrediction() {
+    const tickerInput = document.getElementById('cryptoBoxTicker');
+    const modelSelect = document.getElementById('cryptoBoxModel');
+    const resultBox = document.getElementById('cryptoBoxResultDisplay');
+    const btn = document.getElementById('btnExecuteCryptoBox');
+
+    let ticker = tickerInput.value.trim().toUpperCase();
+    const model = modelSelect.value;
+
+    if (!ticker) {
+        alert("Mohon masukkan simbol koin kripto terlebih dahulu.");
+        return;
+    }
+
+    // Koreksi otomatis jika user lupa menuliskan -USD
+    if (!ticker.includes('-')) {
+        ticker = `${ticker}-USD`;
+        tickerInput.value = ticker;
+    }
+
+    // Set UI Loading
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = `
+        <div style="text-align: center; padding: 20px; color: var(--green);">
+            <i class="ti ti-loader" style="animation: spin 1s linear infinite; font-size: 24px; display: inline-block; margin-bottom: 8px;"></i>
+            <div>Memproses data historis & kalkulasi indikator model ${model.toUpperCase()} v3...</div>
+        </div>
+    `;
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+
+    try {
+        const response = await fetch('/api/predict_crypto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticker: ticker, model: model })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            resultBox.innerHTML = `
+                <div style="color: var(--red); padding: 5px;">
+                    <i class="ti ti-alert-triangle"></i> <b>Gagal:</b> ${esc(data.error)}
+                </div>
+            `;
+        } else {
+            const isBullish = data.class === 1;
+            const trendColor = isBullish ? 'var(--green)' : 'var(--red)';
+            const bgLight = isBullish ? 'rgba(98, 196, 130, 0.1)' : 'rgba(224, 106, 106, 0.1)';
+            const icon = isBullish ? 'ti-trending-up' : 'ti-trending-down';
+            const confPercent = (data.confidence * 100).toFixed(2);
+
+            resultBox.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold; color: #fff; font-family: var(--mono);">${esc(data.ticker)}</div>
+                        <div style="font-size: 11px; color: var(--muted);">Model: ${esc(data.model)}</div>
+                    </div>
+                    <div style="background: ${bgLight}; border: 1px solid ${trendColor}; color: ${trendColor}; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                        <i class="ti ${icon}"></i> ${esc(data.trend)}
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px;">
+                        <span style="color: var(--muted);">Tingkat Keyakinan (Confidence)</span>
+                        <span style="color: #fff; font-weight: bold;">${confPercent}%</span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden;">
+                        <div style="width: ${confPercent}%; height: 100%; background: ${trendColor};"></div>
+                    </div>
+                    <div style="font-size: 11px; color: var(--dim); margin-top: 10px;">
+                        * Batas validasi keputusan (Threshold): ${data.threshold_used * 100}%
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultBox.innerHTML = `<div style="color: var(--red);"><b>Gagal terhubung ke server:</b> ${error.message}</div>`;
+    } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}

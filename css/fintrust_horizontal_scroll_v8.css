@@ -1,0 +1,96 @@
+/* FINTRUST HORIZONTAL SCROLL SAFETY V8 */
+
+.fintrust-hscroll-ready {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(99,210,138,.55) rgba(255,255,255,.08) !important;
+}
+
+.fintrust-hscroll-ready::-webkit-scrollbar {
+  height: 6px !important;
+}
+
+.fintrust-hscroll-ready::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.06) !important;
+  border-radius: 999px !important;
+}
+
+.fintrust-hscroll-ready::-webkit-scrollbar-thumb {
+  background: rgba(99,210,138,.6) !important;
+  border-radius: 999px !important;
+}
+
+.fintrust-hscroll-inner {
+  width: max-content !important;
+  min-width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+.fintrust-hscroll-ready .fintrust-compact-chart,
+.fintrust-hscroll-ready .fintrust-dom-chart,
+.fintrust-hscroll-ready .fintrust-compact-bar-list,
+.fintrust-hscroll-ready .fintrust-compact-pie-layout,
+.fintrust-hscroll-ready .fintrust-bar-list,
+.fintrust-hscroll-ready .fintrust-pie-layout {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Desktop tetap rapi */
+@media (min-width: 769px) {
+  .chart-box.fintrust-hscroll-ready {
+    overflow-x: auto !important;
+  }
+
+  .chart-box.fintrust-hscroll-ready .fintrust-hscroll-inner {
+    min-width: 420px !important;
+  }
+}
+
+/* Mobile: beri area minimum agar grafik tidak dipaksa gepeng */
+@media (max-width: 768px) {
+  .chart-box.fintrust-hscroll-ready {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 10px !important;
+  }
+
+  .chart-box.fintrust-hscroll-ready .fintrust-hscroll-inner {
+    min-width: 390px !important;
+    padding-right: 6px !important;
+  }
+
+  .chart-box.fintrust-hscroll-ready .fintrust-compact-bar-row {
+    grid-template-columns: 52px 260px 28px !important;
+  }
+
+  .chart-box.fintrust-hscroll-ready .fintrust-compact-pie-layout {
+    grid-template-columns: 70px 260px !important;
+  }
+
+  .chart-box.fintrust-hscroll-ready .fintrust-chart-caption {
+    width: 360px !important;
+    max-width: 360px !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .recommendation-card,
+  .recommendation-item,
+  .stock-card,
+  .stock-mobile-card {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .recommendation-card > *,
+  .recommendation-item > *,
+  .stock-card > *,
+  .stock-mobile-card > * {
+    min-width: 0 !important;
+  }
+}

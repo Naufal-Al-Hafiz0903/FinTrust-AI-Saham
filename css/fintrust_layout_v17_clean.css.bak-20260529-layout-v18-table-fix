@@ -1,0 +1,149 @@
+/* FINTRUST LAYOUT V17 CLEAN */
+
+#mode-ipo,
+button#mode-ipo {
+  display: none !important;
+}
+
+.buy-card,
+.alloc-list,
+#pieChart,
+#pieChart__fintrust_dom,
+#pieChart__fintrust_compact,
+[id*="pieChart"] {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.comparison-panel-v17 {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.compare-text-responsive,
+.compare-summary-v17 {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.compare-text-responsive h2,
+.compare-text-responsive p,
+.compare-summary-v17 p {
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  line-height: 1.55 !important;
+}
+
+.compare-stack-v17 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 18px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.chart-card-bar-only-v17 {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  padding: 16px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(145deg, rgba(14, 30, 23, .98), rgba(7, 16, 13, .98)) !important;
+  border: 1px solid rgba(99, 210, 138, .18) !important;
+}
+
+.chart-card-bar-only-v17 canvas#scoreChart {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 260px !important;
+}
+
+.chart-card-bar-only-v17 p {
+  margin: 10px 0 0 !important;
+  color: var(--muted) !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+.recommend-table-wrap-v17 {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  box-sizing: border-box !important;
+  border-radius: 14px !important;
+}
+
+.stock-table-v17 {
+  width: 100% !important;
+  min-width: 780px !important;
+  border-collapse: collapse !important;
+}
+
+.stock-table-v17 th,
+.stock-table-v17 td {
+  vertical-align: top !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+
+@media (max-width: 900px) {
+  .chart-card-bar-only-v17 {
+    padding: 12px !important;
+  }
+
+  .chart-card-bar-only-v17 canvas#scoreChart {
+    height: 220px !important;
+  }
+
+  .stock-table-v17 {
+    min-width: 700px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .compare-stack-v17 {
+    gap: 12px !important;
+  }
+
+  .chart-card-bar-only-v17 {
+    padding: 10px !important;
+    border-radius: 15px !important;
+  }
+
+  .chart-card-bar-only-v17 canvas#scoreChart {
+    height: 200px !important;
+  }
+
+  .chart-card-bar-only-v17 p,
+  .compare-summary-v17 p {
+    font-size: 11px !important;
+  }
+
+  .stock-table-v17 {
+    min-width: 640px !important;
+  }
+}

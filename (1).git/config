@@ -1,0 +1,13 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[remote "origin"]
+	url = https://twdtrii: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@github.com/Naufal-Al-Hafiz0903/FinTrust-AI-Saham.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[pull]
+	rebase = false
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main

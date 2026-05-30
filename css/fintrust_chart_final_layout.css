@@ -1,0 +1,275 @@
+/* FINTRUST FINAL CHART LAYOUT FIX V5 */
+
+.chart-box,
+.chart-card,
+.comparison-panel {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.chart-box.fintrust-dom-ready {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  padding: 12px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(145deg, rgba(16, 31, 24, .98), rgba(8, 17, 14, .98)) !important;
+  border: 1px solid rgba(99, 210, 138, .18) !important;
+}
+
+.chart-box.fintrust-dom-ready canvas,
+.chart-box canvas[data-fintrust-dom-hidden="1"],
+canvas[data-fintrust-force-hidden="1"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+.fintrust-dom-chart {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.fintrust-chart-title {
+  margin: 0 0 12px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #eaf6ee !important;
+  letter-spacing: .02em !important;
+}
+
+.fintrust-bar-list {
+  width: 100% !important;
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.fintrust-bar-row {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: 64px minmax(0, 1fr) 32px !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.fintrust-bar-label {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #eaf6ee !important;
+}
+
+.fintrust-bar-track {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 12px !important;
+  overflow: hidden !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.085) !important;
+}
+
+.fintrust-bar-fill {
+  display: block !important;
+  height: 100% !important;
+  width: var(--value, 0%) !important;
+  min-width: 5px !important;
+  max-width: 100% !important;
+  border-radius: 999px !important;
+  background: #63d28a !important;
+}
+
+.fintrust-bar-fill.mid {
+  background: #e2c45d !important;
+}
+
+.fintrust-bar-fill.low {
+  background: #ee7777 !important;
+}
+
+.fintrust-bar-value {
+  text-align: right !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  color: rgba(234,246,238,.68) !important;
+}
+
+.fintrust-pie-layout {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 130px) minmax(0, 1fr) !important;
+  gap: 16px !important;
+  align-items: center !important;
+}
+
+.fintrust-donut {
+  width: 118px !important;
+  height: 118px !important;
+  max-width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 999px !important;
+  position: relative !important;
+  margin: 0 auto !important;
+}
+
+.fintrust-donut::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 34% !important;
+  border-radius: inherit !important;
+  background: #102018 !important;
+}
+
+.fintrust-donut-center {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  color: #eaf6ee !important;
+}
+
+.fintrust-pie-legend {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.fintrust-pie-item {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: 11px minmax(0, 1fr) 36px !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.fintrust-pie-dot {
+  width: 9px !important;
+  height: 9px !important;
+  border-radius: 999px !important;
+  background: var(--dot, #63d28a) !important;
+}
+
+.fintrust-pie-name {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #dbe9df !important;
+}
+
+.fintrust-pie-percent {
+  text-align: right !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  color: rgba(234,246,238,.65) !important;
+}
+
+@media (max-width: 768px) {
+  html,
+  body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body,
+  .app,
+  .app-shell,
+  .content,
+  main,
+  .main,
+  .workspace,
+  .page,
+  .results,
+  .result-area,
+  .panel,
+  .card,
+  .comparison-panel,
+  .compare-grid,
+  .chart-card,
+  .chart-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .content,
+  main,
+  .main,
+  .workspace,
+  .page {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .compare-grid,
+  .chart-card {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .chart-box.fintrust-dom-ready {
+    padding: 10px !important;
+    border-radius: 16px !important;
+  }
+
+  .fintrust-bar-row {
+    grid-template-columns: 54px minmax(0, 1fr) 28px !important;
+    gap: 8px !important;
+  }
+
+  .fintrust-bar-label {
+    font-size: 10.5px !important;
+  }
+
+  .fintrust-bar-track {
+    height: 11px !important;
+  }
+
+  .fintrust-pie-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .fintrust-donut {
+    width: min(118px, 45vw) !important;
+    height: min(118px, 45vw) !important;
+  }
+
+  .fintrust-pie-item {
+    grid-template-columns: 10px minmax(0, 1fr) 34px !important;
+  }
+}

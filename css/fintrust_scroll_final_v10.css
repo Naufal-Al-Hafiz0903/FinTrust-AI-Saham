@@ -1,0 +1,174 @@
+/* FINTRUST SCROLL FINAL V10 */
+
+.chart-box.fintrust-scroll-v10 {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  padding-bottom: 10px !important;
+}
+
+.chart-box.fintrust-scroll-v10 > canvas,
+.chart-box.fintrust-scroll-v10 canvas,
+.chart-box.fintrust-scroll-v10 [id$="__fintrust_dom"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+.chart-box.fintrust-scroll-v10 > p {
+  display: none !important;
+}
+
+.fintrust-scroll-v10-viewport {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x pan-y !important;
+  overscroll-behavior-x: contain !important;
+  scroll-behavior: smooth !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(99, 210, 138, .85) rgba(255,255,255,.08) !important;
+  box-sizing: border-box !important;
+  border-radius: 12px !important;
+  cursor: grab !important;
+}
+
+.fintrust-scroll-v10-viewport:active {
+  cursor: grabbing !important;
+}
+
+.fintrust-scroll-v10-viewport::-webkit-scrollbar {
+  height: 8px !important;
+}
+
+.fintrust-scroll-v10-viewport::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.08) !important;
+  border-radius: 999px !important;
+}
+
+.fintrust-scroll-v10-viewport::-webkit-scrollbar-thumb {
+  background: rgba(99, 210, 138, .85) !important;
+  border-radius: 999px !important;
+}
+
+.fintrust-scroll-v10-inner {
+  display: block !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+.fintrust-scroll-v10-inner .fintrust-compact-chart {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.fintrust-scroll-v10-controls {
+  display: none;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.fintrust-scroll-v10-btn {
+  border: 1px solid rgba(99, 210, 138, .28) !important;
+  background: rgba(99, 210, 138, .10) !important;
+  color: #eaf6ee !important;
+  border-radius: 999px !important;
+  width: 30px !important;
+  height: 26px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+.fintrust-scroll-v10-hint {
+  color: rgba(234,246,238,.55) !important;
+  font-size: 8.5px !important;
+  line-height: 1.2 !important;
+  margin-right: auto !important;
+  white-space: nowrap !important;
+}
+
+/* Mobile: buat isi grafik lebih lebar dari container agar benar-benar ada area scroll */
+@media (max-width: 768px) {
+  .chart-box.fintrust-scroll-v10 {
+    overflow: visible !important;
+  }
+
+  .fintrust-scroll-v10-viewport {
+    overflow-x: scroll !important;
+    padding-bottom: 6px !important;
+  }
+
+  .fintrust-scroll-v10-inner {
+    width: 520px !important;
+    min-width: 520px !important;
+    max-width: none !important;
+  }
+
+  .fintrust-scroll-v10-inner .fintrust-compact-chart {
+    width: 520px !important;
+    min-width: 520px !important;
+    max-width: none !important;
+  }
+
+  .fintrust-scroll-v10-inner .fintrust-compact-bar-row {
+    grid-template-columns: 58px 360px 30px !important;
+  }
+
+  .fintrust-scroll-v10-inner .fintrust-compact-pie-layout {
+    grid-template-columns: 78px 390px !important;
+  }
+
+  .fintrust-scroll-v10-inner .fintrust-chart-caption {
+    width: 500px !important;
+    max-width: 500px !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    text-overflow: initial !important;
+  }
+
+  .fintrust-scroll-v10-controls {
+    display: flex !important;
+  }
+}
+
+/* Desktop: tidak memaksa scroll kalau ruang cukup */
+@media (min-width: 769px) {
+  .fintrust-scroll-v10-inner {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .fintrust-scroll-v10-inner .fintrust-compact-chart {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+}

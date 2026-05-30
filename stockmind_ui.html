@@ -2,13 +2,17 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Fintrust AI</title>
+
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="css/stockmind_ui.css">
+  <link rel="stylesheet" href="css/stockmind_ui.css?v=20260529-layout-v18-table-fix">
   <style>
     /* ─── Reset & Base ─── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -81,6 +85,20 @@
       justify-content: center;
       margin-bottom: 12px;
     }
+
+    .brand-logo {
+      overflow: hidden;
+      background: transparent !important;
+      padding: 0;
+    }
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      border-radius: inherit;
+    }
+
     .brand-logo svg {
       width: 22px; height: 22px;
       stroke: #fff; stroke-width: 2.2;
@@ -511,20 +529,183 @@
 
     /* ─── Scrollbar global ─── */
     * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE — Mobile First
+       ═══════════════════════════════════════ */
+
+    /* ─── Hamburger button (hidden on desktop) ─── */
+    .menu-toggle {
+      display: none;
+      width: 36px; height: 36px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--text2);
+      flex-shrink: 0;
+      margin-right: 8px;
+    }
+    .menu-toggle i { font-size: 18px; }
+
+    /* ─── Sidebar overlay (mobile) ─── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 99;
+    }
+    .sidebar-overlay.open { display: block; }
+
+    @media (max-width: 768px) {
+      #results {
+        width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+      }
+      /* Body bisa scroll di mobile */
+      body { overflow: auto; }
+
+      .app-shell {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+      }
+
+      /* Sidebar jadi drawer dari kiri */
+      .sidebar {
+        position: fixed;
+        top: 0; left: 0;
+        height: 100vh;
+        width: 260px;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        z-index: 100;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      /* Main area full width */
+      .main {
+        width: 100%;
+        overflow: visible;
+      }
+
+      /* Topbar */
+      .topbar {
+        padding: 0 14px;
+        height: 52px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .menu-toggle { display: flex; }
+      .topbar-crumb { display: none; }
+      .fx-tag { font-size: 10.5px; padding: 3px 9px; }
+
+      /* Content padding lebih kecil */
+      .content {
+        padding: 14px;
+        gap: 14px;
+        overflow: visible;
+      }
+
+      /* Market pills scroll horizontal */
+      .market-pills {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+      }
+      .market-pills::-webkit-scrollbar { display: none; }
+      .pill { white-space: nowrap; flex-shrink: 0; }
+
+      /* Stat row: 1 kolom */
+      .stat-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      /* Input grid: 1 kolom */
+      .input-grid {
+        grid-template-columns: 1fr;
+      }
+      .field.full { grid-column: 1; }
+
+      /* Quick picks scroll horizontal */
+      .quick, .quick-picks {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+      }
+      .quick::-webkit-scrollbar,
+      .quick-picks::-webkit-scrollbar { display: none; }
+      .qpick { flex-shrink: 0; }
+
+      /* Agents grid: 1 kolom */
+      .agents {
+        grid-template-columns: 1fr;
+      }
+
+      /* Card padding lebih kecil */
+      .card { padding: 14px 14px; }
+
+      /* Topbar right: sembunyikan bell */
+      .topbar-btn:nth-child(3) { display: none; }
+    }
+
+    @media (max-width: 400px) {
+      .topbar-title { font-size: 13px; }
+      .stat-val { font-size: 17px; }
+      .pill { font-size: 11.5px; padding: 5px 12px; }
+    }
+
+
+
+
+
+    /* Mobile overflow fix */
+    @media (max-width: 768px) {
+      html { overflow-x: hidden !important; }
+      body { overflow-x: hidden !important; max-width: 100% !important; }
+      .app-shell { max-width: 100% !important; }
+      .topbar { display: flex !important; height: 52px !important; padding: 0 14px !important; }
+      .content { padding: 10px; }
+      .analysis-card, .card { padding: 12px; }
+    }
+
+/* ===== SAFE MOBILE FIX ===== */
+@media (max-width:768px){
+html,body{overflow-x:hidden!important;max-width:100%;}
+*{box-sizing:border-box;}
+.app-shell,.content,.analysis-card,.card{max-width:100%!important;overflow-x:hidden!important;}
+input,select,textarea{min-width:0!important;max-width:100%!important;}
+.topbar{flex-wrap:wrap!important;}
+.quick-buttons{display:flex!important;flex-wrap:wrap!important;gap:8px!important;}
+button{white-space:normal;}
+img,svg{max-width:100%;height:auto;} canvas{max-width:100%;}
+}
+
   </style>
+  <link rel="stylesheet" href="css/stockmind_responsive.css?v=20260529-layout-v18-table-fix">
+  <link rel="stylesheet" href="css/fintrust_layout_v17_clean.css?v=20260529-layout-v18-table-fix">
 </head>
 <body>
 
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <div class="app-shell">
 
   <!-- ═══ SIDEBAR ═══ -->
   <aside class="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo">
-        <svg viewBox="0 0 24 24">
-          <path d="M3 20h18"/>
-          <path d="M6 16l4-5 4 3 4-8"/>
-        </svg>
+        <img src="assets/jarvis-icon.png" alt="Fintrust AI icon">
       </div>
       <div class="brand-name">Fintrust AI</div>
       <div class="brand-sub">Multi-Agent Stock Analyzer</div>
@@ -594,6 +775,7 @@
     <!-- Topbar -->
     <div class="topbar">
       <div class="topbar-left">
+        <div class="menu-toggle" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></div>
         <span class="topbar-title">Analisa Saham</span>
         <span class="topbar-crumb">
           <i class="ti ti-chevron-right" style="font-size:13px;"></i>
@@ -622,10 +804,7 @@
         <button id="mode-global" class="pill" onclick="setMarket('global')">
           <i class="ti ti-world" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Saham Luar Negeri
         </button>
-        <button id="mode-ipo"    class="pill" onclick="setMarket('ipo')">
-          <i class="ti ti-rocket" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>IPO / Watchlist
-        </button>
-        <button id="mode-crypto" class="pill" onclick="setMarket('crypto')">
+<button id="mode-crypto" class="pill" onclick="setMarket('crypto')">
           <i class="ti ti-currency-bitcoin" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Crypto Market
         </button>
       </div>
@@ -724,6 +903,37 @@
 
       <!-- Results -->
       <main id="results" class="results"></main>
+      <section id="cryptoDedicatedContainer" class="panel" style="margin-top: 30px; border: 1px solid var(--border); background: var(--bg2); padding: 20px; border-radius: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <i class="ti ti-currency-bitcoin" style="font-size: 24px; color: var(--green);"></i>
+        <h2 style="margin: 0; font-size: 1.25rem; color: #fff;"> Panel Prediksi Crypto Eksklusif (Model v3)</h2>
+      </div>
+      
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">
+        Panel ini bekerja terpisah dari sistem saham. Menggunakan model seri v3 (XGBoost & Random Forest) yang dilatih khusus dengan pola data kripto.
+      </p>
+
+      <div class="grid" style="grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
+        <div class="field">
+          <label style="display: block; margin-bottom: 8px; font-size: 12px; color: var(--muted);">Simbol Kripto</label>
+          <input type="text" id="cryptoBoxTicker" placeholder="Contoh: BTC-USD, ETH-USD" value="BTC-USD" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: #fff;">
+        </div>
+        <div class="field">
+          <label style="display: block; margin-bottom: 8px; font-size: 12px; color: var(--muted);">Pilih Arsitektur Model</label>
+          <select id="cryptoBoxModel" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: #fff;">
+            <option value="xgb">XGBoost Crypto v3</option>
+            <option value="rf">Random Forest Crypto v3</option>
+          </select>
+        </div>
+        <div class="field">
+          <button id="btnExecuteCryptoBox" class="pill" style="background: var(--accent); color: #fff; padding: 12px 24px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;" onclick="runCryptoContainerPrediction()">
+            Jalankan Analisis Crypto
+          </button>
+        </div>
+      </div>
+
+      <div id="cryptoBoxResultDisplay" style="display: none; margin-top: 20px; padding: 15px; background: var(--bg3); border-radius: 8px; border: 1px dashed var(--line);"></div>
+    </section>
 
     </div><!-- /content -->
 
@@ -947,12 +1157,12 @@
 })();
 </script>
 
-<script src="js/stockmind_templates.js"></script>
-<script src="js/stockmind_ui.js"></script>
-</body>
-</html>
+<script src="js/stockmind_templates.js?v=20260529-layout-v18-table-fix"></script>
+<script src="js/stockmind_ui.js?v=20260529-layout-v18-table-fix"></script>
+<script src="js/fintrust_responsive_runtime.js?v=20260529-layout-v18-table-fix"></script>
+
 <div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#1e293b;border-radius:16px;padding:32px;min-width:320px;max-width:400px;width:90%;color:#fff;position:relative;">
+  <div style="background:#1e293b;border-radius:16px;padding:32px;max-width:400px;width:100%;color:#fff;position:relative;">
     <button onclick="closeProfile()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;">&times;</button>
     <div style="text-align:center;margin-bottom:24px;">
       <div style="width:72px;height:72px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;">👤</div>
@@ -995,3 +1205,32 @@ function openProfile(){
 function closeProfile(){document.getElementById("profileModal").style.display="none";}
 function doLogout(){localStorage.removeItem("stockmind_user");window.location.href="login.html";}
 </script>
+<script>
+function toggleSidebar(){
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if (!sidebar || !overlay) return;
+  const isOpen = sidebar.classList.toggle("open");
+  overlay.classList.toggle("open", isOpen);
+  document.body.classList.toggle("sidebar-open", isOpen);
+}
+function closeSidebar(){
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if (sidebar) sidebar.classList.remove("open");
+  if (overlay) overlay.classList.remove("open");
+  document.body.classList.remove("sidebar-open");
+}
+document.addEventListener("click", function(e){
+  if (window.innerWidth > 768) return;
+  if (e.target.closest(".sidebar .nav-item")) closeSidebar();
+});
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape") {
+    closeSidebar();
+    if (typeof closeProfile === "function") closeProfile();
+  }
+});
+</script>
+</body>
+</html>

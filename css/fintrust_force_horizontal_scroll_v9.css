@@ -1,0 +1,174 @@
+/* FINTRUST FORCE HORIZONTAL SCROLL V9 */
+
+html,
+body {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overscroll-behavior-x: contain !important;
+}
+
+.content,
+main,
+.main,
+.workspace,
+.page,
+.results,
+.result-area,
+.panel,
+.card,
+.comparison-panel,
+.compare-grid,
+.chart-card {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.chart-box.fintrust-xscroll-force {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x pan-y !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(99,210,138,.75) rgba(255,255,255,.08) !important;
+  cursor: grab !important;
+  padding-bottom: 12px !important;
+}
+
+.chart-box.fintrust-xscroll-force:active {
+  cursor: grabbing !important;
+}
+
+.chart-box.fintrust-xscroll-force::-webkit-scrollbar {
+  height: 7px !important;
+}
+
+.chart-box.fintrust-xscroll-force::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.08) !important;
+  border-radius: 999px !important;
+}
+
+.chart-box.fintrust-xscroll-force::-webkit-scrollbar-thumb {
+  background: rgba(99,210,138,.75) !important;
+  border-radius: 999px !important;
+}
+
+.fintrust-xscroll-inner {
+  display: block !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+.fintrust-scroll-hint {
+  display: none;
+  margin: 6px 0 0 !important;
+  padding: 0 !important;
+  font-size: 8.5px !important;
+  line-height: 1.2 !important;
+  color: rgba(234,246,238,.48) !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+/* Jangan biarkan chart lama menahan ukuran */
+.chart-box.fintrust-xscroll-force canvas,
+.chart-box.fintrust-xscroll-force #scoreChart,
+.chart-box.fintrust-xscroll-force #pieChart,
+.chart-box.fintrust-xscroll-force [id$="__fintrust_dom"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+/* Mobile: beri lebar minimum supaya bisa digeser */
+@media (max-width: 768px) {
+  html,
+  body {
+    overflow-x: auto !important;
+  }
+
+  .content,
+  main,
+  .main,
+  .workspace,
+  .page {
+    overflow-x: visible !important;
+  }
+
+  .comparison-panel,
+  .compare-grid,
+  .chart-card {
+    overflow-x: visible !important;
+  }
+
+  .chart-box.fintrust-xscroll-force {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  .chart-box.fintrust-xscroll-force .fintrust-xscroll-inner {
+    width: 430px !important;
+    min-width: 430px !important;
+    max-width: none !important;
+  }
+
+  .chart-box.fintrust-xscroll-force .fintrust-compact-chart,
+  .chart-box.fintrust-xscroll-force .fintrust-dom-chart {
+    width: 430px !important;
+    min-width: 430px !important;
+    max-width: none !important;
+  }
+
+  .chart-box.fintrust-xscroll-force .fintrust-compact-bar-row {
+    grid-template-columns: 56px 290px 30px !important;
+  }
+
+  .chart-box.fintrust-xscroll-force .fintrust-compact-pie-layout {
+    grid-template-columns: 76px 300px !important;
+  }
+
+  .chart-box.fintrust-xscroll-force .fintrust-chart-caption {
+    width: 410px !important;
+    max-width: 410px !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .chart-box.fintrust-xscroll-force .fintrust-scroll-hint {
+    display: block !important;
+  }
+
+  .recommendation-card,
+  .recommendation-item,
+  .stock-card,
+  .stock-mobile-card {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* Desktop tetap penuh dan tidak dipaksa sempit */
+@media (min-width: 769px) {
+  .chart-box.fintrust-xscroll-force {
+    overflow-x: auto !important;
+  }
+
+  .chart-box.fintrust-xscroll-force .fintrust-xscroll-inner {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+}

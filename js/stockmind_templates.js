@@ -50,7 +50,7 @@ const TemplateUI = {
           </div>
           <p class="summary">${esc(final.final_summary)}</p>
         </div>
-        <div class="panel buy-card"><h3>Rekomendasi Pembelian</h3>${planHtml}</div>
+        
       </section>
       <div class="section-title">Hasil per agent</div>
       <section class="agent-grid">${agentCards}</section>
@@ -68,44 +68,71 @@ const TemplateUI = {
       <div id="comparisonMount"></div>`;
   },
 
+  
   comparison: function(title, subtitle, items, allocs, errors, fxText, clsVerdict, esc, fmtNum, fmtMoney, affordability) {
     const rows = items.map((it, i) => {
-      const stock = it.stock, sd = it.scoreData, aff = it.aff || affordability(stock), al = allocs[i] || {};
+      const stock = it.stock || {};
+      const sd = it.scoreData || {};
+      const aff = it.aff || affordability(stock);
+      const al = allocs[i] || {};
       const can = aff.canBuy ? 'Mampu dibeli' : aff.note;
-      return `<tr><td>${esc(it.ticker)}</td><td>${esc(stock.name || it.ticker)}</td><td>${esc(stock.formattedPrice || 'N/A')}</td><td>${Number.isFinite(Number(stock.changePercent)) ? fmtNum(stock.changePercent, 2) + '%' : 'N/A'}</td><td>${sd.score}</td><td><span class="badge ${clsVerdict(sd.verdict)}">${sd.verdict}</span></td><td>${esc(can)}</td><td>${esc(al.used > 0 ? al.text : 'Tidak Direkomendasikan Beli')}</td></tr>`;
+      const recommendation = al.used > 0 ? al.text : 'Tidak Direkomendasikan Beli';
+
+      return `<tr>
+        <td>${esc(it.ticker)}</td>
+        <td>${esc(stock.name || it.ticker)}</td>
+        <td>${esc(stock.formattedPrice || 'N/A')}</td>
+        <td>${Number.isFinite(Number(stock.changePercent)) ? fmtNum(stock.changePercent, 2) + '%' : 'N/A'}</td>
+        <td>${esc(sd.score ?? '-')}</td>
+        <td><span class="badge ${clsVerdict(sd.verdict)}">${esc(sd.verdict || 'TUNGGU')}</span></td>
+        <td>${esc(can)}</td>
+        <td>${esc(recommendation)}</td>
+      </tr>`;
     }).join('');
-    const allocRows = items.map((it, i) => {
-      const al = allocs[i] || {}, sd = it.scoreData;
-      const detail = al.used > 0 ? `${fmtMoney(al.used, al.currency)} · ${al.text}` : (al.note || 'Tidak direkomendasikan beli saat ini.');
-      return `<div class="alloc-item"><b>${esc(it.ticker)} · ${sd.verdict}</b><span>${esc(detail)}</span><span>${esc(sd.reason)}</span></div>`;
-    }).join('');
-    const errText = errors.length ? `<p class="compare-note">Beberapa ticker tidak berhasil diambil: ${esc(errors.map(e => e.ticker).join(', '))}. Data yang berhasil tetap ditampilkan.</p>` : '';
+
+    const errText = errors.length
+      ? `<p class="compare-note">Beberapa ticker tidak berhasil diambil: ${esc(errors.map(e => e.ticker).join(', '))}. Data yang berhasil tetap ditampilkan.</p>`
+      : '';
 
     return `<div class="section-title">Perbandingan saham sejenis</div>
-    <section class="panel card">
-      <div class="topline">
+    <section class="panel card comparison-panel comparison-panel-v17">
+      <div class="topline compare-text-responsive">
         <div class="company">
-          <h2>${esc(title)}</h2><p>${esc(subtitle)}</p><p class="compare-note">${esc(fxText)}</p>
+          <h2>${esc(title)}</h2>
+          <p>${esc(subtitle)}</p>
+          <p class="compare-note">${esc(fxText)}</p>
         </div>
       </div>
-      <div class="compare-grid">
-        <div>
-          <div class="table-wrap">
-            <table class="stock-table">
-              <thead><tr><th>Kode</th><th>Nama</th><th>Harga</th><th>Change</th><th>Skor</th><th>Status</th><th>Kemampuan beli</th><th>Rekomendasi</th></tr></thead>
-              <tbody>${rows}</tbody>
-            </table>
-          </div>
-          ${errText}
-          <p class="compare-note">Sistem hanya memberi alokasi jika nominal mampu membeli saham berdasarkan harga realtime. Status selain BELI selalu ditampilkan sebagai Tidak Direkomendasikan Beli.</p>
+
+      <div class="compare-summary-v17">
+        ${errText}
+        <p class="compare-note">Sistem hanya memberi alokasi jika nominal mampu membeli saham berdasarkan harga realtime. Status selain BELI selalu ditampilkan sebagai Tidak Direkomendasikan Beli.</p>
+      </div>
+
+      <div class="compare-stack-v17">
+        <div class="chart-card chart-card-bar-only-v17">
+          <canvas id="scoreChart"></canvas>
+          <p>Grafik skor per saham.</p>
         </div>
-        <div class="chart-card">
-          <canvas id="scoreChart"></canvas><p>Grafik skor per saham.</p>
-          <canvas id="pieChart" style="margin-top:14px"></canvas><p>Diagram alokasi pembelian. Jika tidak ada saham layak beli, dana tetap sebagai cash.</p>
+
+        <div class="table-wrap recommend-table-wrap-v17">
+          <table class="stock-table stock-table-v17">
+            <thead>
+              <tr>
+                <th>Kode</th>
+                <th>Nama</th>
+                <th>Harga</th>
+                <th>Change</th>
+                <th>Skor</th>
+                <th>Status</th>
+                <th>Kemampuan beli</th>
+                <th>Rekomendasi</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
         </div>
       </div>
-      <div class="section-title">Rekomendasi pembelian</div>
-      <div class="alloc-list">${allocRows}</div>
     </section>`;
   },
 
@@ -116,14 +143,15 @@ const TemplateUI = {
   },
 
   predictionContainer: function(ticker) {
+    const safeTicker = String(ticker || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     return `
       <div class="section-title">Prediksi AI Multimodel</div>
-      <div class="mode-row" style="margin-bottom: 15px;">
-        <button id="btn-prophet" class="pill on" onclick="window.renderPredictionView('prophet', '${ticker}')">Prophet Model</button>
-        <button id="btn-xgboost" class="pill" onclick="window.renderPredictionView('xgboost', '${ticker}')">XGBoost Model</button>
-        <button id="btn-randomforest" class="pill" onclick="window.renderPredictionView('randomforest', '${ticker}')">Random Forest</button>
+      <div class="mode-row prediction-tabs" style="margin-bottom: 15px;">
+        <button id="btn-xgboost" class="pill on" onclick="window.renderPredictionView('xgboost', '${safeTicker}')">XGBoost Model</button>
+        <button id="btn-randomforest" class="pill" onclick="window.renderPredictionView('randomforest', '${safeTicker}')">Random Forest</button>
+        <button id="btn-prophet" class="pill" onclick="window.renderPredictionView('prophet', '${safeTicker}')">Prophet Model</button>
       </div>
-      <section class="panel card" id="predictionCard">
+      <section class="panel card prediction-card" id="predictionCard">
         <p class="compare-note">Sedang menghitung perkiraan harga menggunakan AI Multimodel...</p>
       </section>
     `;
@@ -207,10 +235,17 @@ const TemplateUI = {
       let rangeText = (lower && upper) ? `${fmtNum(lower)} - ${fmtNum(upper)}` : '-';
       return `<tr><td>${esc(f.date || f.ds || 'N/A')}</td><td style="color:var(--blue)"><b>${fmtNum(price)}</b></td><td style="color:var(--dim)">${rangeText}</td></tr>`;
     }).join('');
+    const mobileRows = slicedForecast.map(f => {
+      const price = f.price || f.prediction || f.close || f.yhat || 0;
+      const lower = f.lower !== undefined ? f.lower : (f.yhat_lower || 0);
+      const upper = f.upper !== undefined ? f.upper : (f.yhat_upper || 0);
+      let rangeText = (lower && upper) ? `${fmtNum(lower)} - ${fmtNum(upper)}` : '-';
+      return `<article class="stock-mobile-card prophet-mobile-card"><div class="stock-mobile-head"><div><b>${esc(f.date || f.ds || 'N/A')}</b><span>Prediksi ${esc(ticker)}</span></div></div><div class="stock-mobile-grid"><div><small>Target</small><strong>${fmtNum(price)}</strong></div><div><small>Rentang</small><strong>${esc(rangeText)}</strong></div></div></article>`;
+    }).join('');
 
     return `
       <p class="xgb-desc">Berikut adalah perkiraan pergerakan harga saham <b>${esc(ticker)}</b> menggunakan model <b>PROPHET</b>.</p>
-      <div class="table-wrap">
+      <div class="table-wrap prediction-table-wrap">
         <table class="stock-table">
           <thead>
             <tr><th>Tanggal</th><th>Perkiraan Harga Target</th><th>Rentang Harga (Bawah - Atas)</th></tr>
@@ -220,6 +255,7 @@ const TemplateUI = {
           </tbody>
         </table>
       </div>
+      <div class="stock-mobile-list prophet-mobile-list">${mobileRows || `<p class="compare-note">Data tidak tersedia</p>`}</div>
       <p class="compare-note" style="margin-top:10px;">*Catatan: Angka di atas hanyalah perkiraan komputer berdasarkan model machine learning dan bukan jaminan pasti di masa depan.</p>
     `;
   },

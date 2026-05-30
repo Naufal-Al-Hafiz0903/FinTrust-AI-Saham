@@ -52,7 +52,7 @@ if (strlen($pass) < 8) {
 try {
     $db = getDB();
     ensureUsersTable();
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log('[StockMind Register] DB error: ' . $e->getMessage());
     jsonOut(false, 'Koneksi database gagal. Hubungi administrator.', 500);
 }
@@ -71,7 +71,7 @@ try {
 
         jsonOut(false, 'Username sudah digunakan, pilih yang lain.', 409);
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log('[StockMind Register] Cek duplikat: ' . $e->getMessage());
     jsonOut(false, 'Terjadi kesalahan server.', 500);
 }
@@ -93,7 +93,7 @@ try {
 
     jsonOut(true, 'Akun berhasil dibuat! Silakan masuk.', 201, ['user_id' => (int)$db->lastInsertId()]);
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log('[StockMind Register] Insert: ' . $e->getMessage());
     jsonOut(false, 'Gagal membuat akun. Coba lagi.', 500);
 }
