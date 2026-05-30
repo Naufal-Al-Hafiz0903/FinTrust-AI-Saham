@@ -2,6 +2,9 @@
 
 Dashboard analisis saham berbasis multi-agent AI untuk saham Indonesia dan saham luar negeri.
 
+link web:
+https://fintrustai.dev.eraenterprise.id
+
 ## Fitur utama
 
 - Analisis saham Indonesia dan saham luar negeri dari Yahoo Finance.
