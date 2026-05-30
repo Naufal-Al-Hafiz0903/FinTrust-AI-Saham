@@ -1,84 +1,92 @@
-# FinTrust AI Saham
+# FinTrust AI Saham - Revisi Jarvis
 
-Dashboard analisis saham berbasis multi-agent AI untuk saham Indonesia dan saham luar negeri.
+Dashboard analisis saham dengan data harga realtime/near-realtime dari Yahoo Finance dan prediksi 1-5 hari trading ke depan.
 
 ## Fitur utama
 
-- Analisis saham Indonesia dan saham luar negeri dari Yahoo Finance.
-- Tipe saham dipisah jelas: `Saham Indonesia`, `Saham Luar Negeri`, dan `IPO / Watchlist`.
-- Jika kode saham diisi, sistem menganalisis saham tersebut.
-- Jika dua kode saham atau lebih diisi, sistem membandingkan saham pada tipe saham yang sama.
-- Jika kode saham kosong tetapi nominal investasi diisi, sistem melakukan pencarian rekomendasi berdasarkan tipe saham yang dipilih dan harga realtime.
-- Jika kode saham dan nominal sama-sama kosong, sistem menampilkan warning merah.
-- Jika nominal tidak cukup untuk membeli saham berdasarkan harga realtime, sistem menampilkan notifikasi kuning.
-- Rekomendasi pembelian tidak dibiarkan kosong. Jika tidak layak beli, tampil `Tidak Direkomendasikan Beli`.
-- Perhitungan saham Indonesia memakai minimal 1 lot atau 100 saham.
-- Perhitungan saham luar negeri memakai minimal 1 saham utuh.
-- Kurs USD/IDR realtime dari Yahoo Finance dipakai untuk konversi IDR dan USD.
-- Grafik skor saham dan diagram alokasi pembelian aktif.
-- Backend Node.js + Express.
-- AI memakai Groq API.
-- Market data memakai yahoo-finance2.
+- Input ticker tidak dibatasi contoh. Sistem mencoba membaca ticker apa pun yang tersedia di Yahoo Finance.
+- Saham Indonesia bisa memakai kode biasa seperti `BBRI`, `BBCA`, `TLKM` atau format Yahoo seperti `BBRI.JK`.
+- Saham global bisa memakai `NVDA`, `AAPL`, `MSFT`, dan sejenisnya saat market dipilih Global.
+- Crypto bisa memakai `BTC`, `ETH`, atau format `BTC-USD`.
+- Harga, situasi market, dan prediksi diambil saat request dilakukan.
+- Model ONNX bawaan tetap dipakai untuk XGBoost dan Random Forest.
+- Hybrid Ensemble menggabungkan Prophet/fallback trend + XGBoost + Random Forest.
 
-## Menjalankan di localhost
+> Catatan penting: data Yahoo Finance dapat delay sesuai aturan bursa. Realtime di sini berarti aplikasi mengambil data terbaru saat request, bukan memakai data statis.
 
-```powershell
-npm install
-copy .env.example .env
+## Cara menjalankan di Windows
+
+Cara paling aman:
+
+1. Extract zip.
+2. Buka folder project.
+3. Jalankan:
+
+```bat
+setup_windows.bat
 ```
 
-Isi `GROQ_API_KEY` di file `.env`.
+4. Setelah selesai, jalankan:
 
-```env
-GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxx
-GROQ_MODEL=llama-3.3-70b-versatile
-PORT=3000
+```bat
+start_windows.bat
 ```
 
-Jalankan aplikasi:
+5. Buka browser:
 
-```powershell
-npm start
-```
-
-Buka browser:
-
-```text
+```txt
 http://localhost:3000
 ```
 
-Health check:
+## Kalau menjalankan manual lewat PowerShell
 
-```text
-http://localhost:3000/api/health
+```powershell
+cd C:\PA\FinTrust-AI-Saham
+npm install
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+$env:PYTHON = "$PWD\.venv\Scripts\python.exe"
+npm start
 ```
 
-Cek kurs realtime:
+Opsional untuk Prophet:
 
-```text
-http://localhost:3000/api/fx/usdidr
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-optional.txt
 ```
 
-## Cara memakai
+Jika Prophet tidak diinstall, aplikasi tetap jalan memakai fallback trend + ONNX.
 
-1. Pilih `Saham Indonesia` atau `Saham Luar Negeri`.
-2. Pilih cakupan pencarian. Default-nya `Semua Sektor`.
-3. Untuk analisis satu saham, isi satu kode saham.
-4. Untuk perbandingan, isi beberapa kode saham, contoh `ADRO, PTBA, ITMG` atau `NVDA, AMD, AVGO`.
-5. Untuk rekomendasi otomatis, kosongkan kode saham dan isi nominal investasi.
-6. Klik `Analisa`.
+## Test cepat
 
-Contoh:
+```bat
+test_prediction_windows.bat
+```
 
-- `BBCA` tanpa nominal: analisis saham saja.
-- `BBCA` dengan nominal `1000000`: analisis dan jumlah beli jika nominal cukup.
-- Kosongkan kode, pilih `Saham Indonesia`, pilih `Semua Sektor`, nominal `5000000`: sistem mencari saham Indonesia yang mampu dibeli.
-- Kosongkan kode, pilih `Saham Luar Negeri`, nominal `1200000` IDR: sistem memakai kurs realtime untuk mengecek apakah nominal cukup membeli saham luar negeri.
-- `ADRO, PTBA, ITMG`: perbandingan saham batu bara.
-- `NVDA, AMD, AVGO`: perbandingan saham semikonduktor luar negeri.
+Atau buka:
 
-## Catatan
+```txt
+http://localhost:3000/api/diagnostics
+```
 
-Jika `GROQ_API_KEY` belum valid, aplikasi tetap menampilkan hasil fallback lokal memakai harga dari Yahoo Finance. Untuk analisis AI penuh, isi API key yang benar lalu restart `npm start`.
+Jika diagnostics menampilkan `missing`, jalankan ulang `setup_windows.bat`.
 
-Aplikasi ini hanya untuk edukasi dan riset. Bukan saran investasi resmi.
+## Penyebab error yang diperbaiki
+
+Error seperti ini:
+
+```txt
+ModuleNotFoundError: No module named 'numpy'
+ModuleNotFoundError: No module named 'onnxruntime'
+```
+
+berarti dependency Python belum terinstall pada Python yang dipakai Node.js. Revisi ini otomatis memakai `.venv` jika ada dan menyediakan `setup_windows.bat`.
+
+Error seperti ini:
+
+```txt
+Cannot read properties of undefined (reading 'regularMarketPrice')
+```
+
+berarti Yahoo Finance tidak mengembalikan quote untuk simbol tertentu. Revisi ini sudah dibuat lebih aman: server mencoba kandidat simbol dan mengembalikan error JSON yang jelas tanpa crash.

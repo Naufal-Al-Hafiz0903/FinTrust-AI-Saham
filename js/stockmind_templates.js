@@ -122,6 +122,7 @@ const TemplateUI = {
         <button id="btn-prophet" class="pill on" onclick="window.renderPredictionView('prophet', '${ticker}')">Prophet Model</button>
         <button id="btn-xgboost" class="pill" onclick="window.renderPredictionView('xgboost', '${ticker}')">XGBoost Model</button>
         <button id="btn-randomforest" class="pill" onclick="window.renderPredictionView('randomforest', '${ticker}')">Random Forest</button>
+        <button id="btn-ensemble" class="pill" onclick="window.renderPredictionView('ensemble', '${ticker}')">Realtime Hybrid</button>
       </div>
       <section class="panel card" id="predictionCard">
         <p class="compare-note">Sedang menghitung perkiraan harga menggunakan AI Multimodel...</p>
@@ -135,41 +136,46 @@ const TemplateUI = {
   rawJsonView: (data) => `<pre style="background:var(--panel2); padding:12px; border-radius:8px; overflow-x:auto; font-size:12px; color:var(--text); margin-top: 10px;">${JSON.stringify(data, null, 2)}</pre>`,
 
   xgboostView: function(data, ticker, confPercent, trend, trendColor, trendIcon, signalNote, profitProjectionHtml, esc) {
+    const fmt = (v, d = 2) => Number.isFinite(Number(v)) ? Number(v).toLocaleString('id-ID', { maximumFractionDigits: d }) : 'N/A';
+    const metrics = data.metrics || {};
+    const forecast = Array.isArray(data.forecast) ? data.forecast.slice(0, 5) : [];
+    const metricColor = Number(metrics.sim_profit || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+    const forecastRows = forecast.map(f => `<tr><td>${esc(f.date || 'N/A')}</td><td><b>${fmt(f.price)}</b></td><td>${fmt(f.expected_return_pct)}%</td><td style="color:var(--dim)">${fmt(f.lower)} - ${fmt(f.upper)}</td></tr>`).join('');
+    const action = data.action || {};
+    const priceText = data.current_price ? `${fmt(data.current_price)} ${esc(data.currency || '')}` : 'N/A';
     return `
-      <p class="xgb-desc">Berikut adalah hasil analisis klasifikasi dari model <b>XGBOOST</b> untuk saham <b>${esc(ticker)}</b>.</p>
+      <p class="xgb-desc">Berikut adalah hasil analisis klasifikasi realtime dari model <b>XGBOOST</b> untuk saham <b>${esc(data.symbol || ticker)}</b>.</p>
       <div class="xgb-card">
-        <p class="xgb-title">Sinyal Tren XGBoost v2 (Super Optimized)</p>
-        <h2 class="xgb-trend" style="color:${trendColor};">
-          ${trendIcon} ${esc(trend)}
-        </h2>
-        
+        <p class="xgb-title">Sinyal Tren XGBoost ONNX + Data Realtime</p>
+        <h2 class="xgb-trend" style="color:${trendColor};">${trendIcon} ${esc(trend)}</h2>
         <div class="xgb-box">
-          <div class="xgb-flex">
-              <span class="xgb-label">Tingkat Keyakinan (Confidence)</span>
-              <b class="xgb-val">${confPercent}%</b>
-          </div>
-          <div class="xgb-bar-bg">
-              <div class="xgb-bar-fill" style="width: ${confPercent}%; background: ${trendColor};"></div>
-          </div>
+          <div class="xgb-flex"><span class="xgb-label">Harga terbaru Yahoo Finance</span><b class="xgb-val">${priceText}</b></div>
+          <div class="xgb-flex"><span class="xgb-label">Target 5 hari</span><b class="xgb-val">${fmt(data.target_5d)} ${esc(data.currency || '')}</b></div>
+          <div class="xgb-flex"><span class="xgb-label">Estimasi return 5 hari</span><b class="xgb-val">${fmt(data.expected_return_5d_pct)}%</b></div>
+          <div class="xgb-flex"><span class="xgb-label">Keputusan model</span><b class="xgb-val">${esc(action.verdict || 'TUNGGU')}</b></div>
+          <p class="compare-note">${esc(action.note || data.realtime_note || 'Data diperbarui saat request.')}</p>
+        </div>
+        <div class="xgb-box">
+          <div class="xgb-flex"><span class="xgb-label">Tingkat Keyakinan (Confidence)</span><b class="xgb-val">${confPercent}%</b></div>
+          <div class="xgb-bar-bg"><div class="xgb-bar-fill" style="width: ${confPercent}%; background: ${trendColor};"></div></div>
           ${signalNote}
           ${profitProjectionHtml}
-          <div class="xgb-footer-note">
-              <span style="color:var(--muted); font-size: 12px;">Rentang Waktu Prediksi:</span>
-              <b style="color:var(--text); font-size: 12px;">1 - 5 Hari ke Depan (Minggu Ini)</b>
-          </div>
+          <div class="xgb-footer-note"><span style="color:var(--muted); font-size: 12px;">Rentang Waktu Prediksi:</span><b style="color:var(--text); font-size: 12px;">1 - 5 Hari Trading ke Depan</b></div>
         </div>
-
         <div class="xgb-box">
-          <p class="xgb-title" style="margin-bottom: 12px;">📊 Performa Real-World Testing Model</p>
+          <p class="xgb-title" style="margin-bottom: 12px;">📈 Proyeksi Harga Realtime</p>
+          <div class="table-wrap"><table class="stock-table"><thead><tr><th>Tanggal</th><th>Target</th><th>Return</th><th>Rentang</th></tr></thead><tbody>${forecastRows || `<tr><td colspan="4">Forecast tidak tersedia</td></tr>`}</tbody></table></div>
+        </div>
+        <div class="xgb-box">
+          <p class="xgb-title" style="margin-bottom: 12px;">📊 Backtest Model Bawaan</p>
           <div class="xgb-metrics-grid">
-            <div class="xgb-metric"><small>Accuracy</small><br><b>65.65%</b></div>
-            <div class="xgb-metric"><small>Precision (Keamanan)</small><br><b>36.84%</b></div>
-            <div class="xgb-metric"><small>Sim. Profit</small><br><b style="color:var(--red);">-1.38%</b></div>
-            <div class="xgb-metric"><small>F1 Score</small><br><b>0.1505</b></div>
+            <div class="xgb-metric"><small>Accuracy</small><br><b>${fmt(metrics.accuracy)}%</b></div>
+            <div class="xgb-metric"><small>Precision (Keamanan)</small><br><b>${fmt(metrics.precision)}%</b></div>
+            <div class="xgb-metric"><small>Sim. Profit</small><br><b style="color:${metricColor};">${Number(metrics.sim_profit || 0) >= 0 ? '+' : ''}${fmt(metrics.sim_profit)}%</b></div>
+            <div class="xgb-metric"><small>F1 Score</small><br><b>${fmt(metrics.f1_score, 4)}</b></div>
           </div>
-          <p style="color:var(--dim); font-size: 11px; margin-top: 12px; line-height: 1.4;">
-              Model ini menganalisis 12 fitur teknikal yang dioptimasi menggunakan machine learning XGBoost ONNX untuk mengklasifikasikan arah pergerakan harga.
-          </p>
+          <p style="color:var(--dim); font-size: 11px; margin-top: 12px; line-height: 1.4;">${esc(metrics.profile_note || 'Model membaca 12 fitur teknikal terbaru dan mengklasifikasikan arah harga.')}</p>
+          <p style="color:var(--dim); font-size: 11px; margin-top: 8px;">Fetched: ${esc(data.fetched_at || 'N/A')}</p>
         </div>
       </div>
     `;
@@ -199,74 +205,107 @@ const TemplateUI = {
       </div>`;
   },
 
-  prophetView: function(slicedForecast, ticker, esc, fmtNum) {
+  prophetView: function(slicedForecast, ticker, esc, fmtNum, data = {}) {
     let tableRows = slicedForecast.map(f => {
       const price = f.price || f.prediction || f.close || f.yhat || 0;
       const lower = f.lower !== undefined ? f.lower : (f.yhat_lower || 0);
       const upper = f.upper !== undefined ? f.upper : (f.yhat_upper || 0);
       let rangeText = (lower && upper) ? `${fmtNum(lower)} - ${fmtNum(upper)}` : '-';
-      return `<tr><td>${esc(f.date || f.ds || 'N/A')}</td><td style="color:var(--blue)"><b>${fmtNum(price)}</b></td><td style="color:var(--dim)">${rangeText}</td></tr>`;
+      return `<tr><td>${esc(f.date || f.ds || 'N/A')}</td><td style="color:var(--blue)"><b>${fmtNum(price)}</b></td><td>${fmtNum(f.expected_return_pct || 0)}%</td><td style="color:var(--dim)">${rangeText}</td></tr>`;
     }).join('');
 
     return `
-      <p class="xgb-desc">Berikut adalah perkiraan pergerakan harga saham <b>${esc(ticker)}</b> menggunakan model <b>PROPHET</b>.</p>
+      <p class="xgb-desc">Berikut adalah perkiraan pergerakan harga saham <b>${esc(data.symbol || ticker)}</b> menggunakan model <b>${esc(data.model || 'PROPHET')}</b>.</p>
+      <div class="xgb-box">
+        <div class="xgb-flex"><span class="xgb-label">Harga terbaru Yahoo Finance</span><b class="xgb-val">${fmtNum(data.current_price)} ${esc(data.currency || '')}</b></div>
+        <div class="xgb-flex"><span class="xgb-label">Target 5 hari</span><b class="xgb-val">${fmtNum(data.target_5d)} ${esc(data.currency || '')}</b></div>
+        <div class="xgb-flex"><span class="xgb-label">Estimasi return 5 hari</span><b class="xgb-val">${fmtNum(data.expected_return_5d_pct)}%</b></div>
+        <p class="compare-note">${esc(data.realtime_note || 'Data diperbarui saat request.')}</p>
+      </div>
       <div class="table-wrap">
         <table class="stock-table">
-          <thead>
-            <tr><th>Tanggal</th><th>Perkiraan Harga Target</th><th>Rentang Harga (Bawah - Atas)</th></tr>
-          </thead>
-          <tbody>
-            ${tableRows || `<tr><td colspan="3" style="text-align:center;">Data tidak tersedia</td></tr>`}
-          </tbody>
+          <thead><tr><th>Tanggal</th><th>Perkiraan Harga Target</th><th>Return</th><th>Rentang Harga</th></tr></thead>
+          <tbody>${tableRows || `<tr><td colspan="4" style="text-align:center;">Data tidak tersedia</td></tr>`}</tbody>
         </table>
       </div>
-      <p class="compare-note" style="margin-top:10px;">*Catatan: Angka di atas hanyalah perkiraan komputer berdasarkan model machine learning dan bukan jaminan pasti di masa depan.</p>
+      <p class="compare-note" style="margin-top:10px;">*Catatan: Forecast di-anchor ke harga terbaru dari Yahoo Finance. Ini bukan jaminan harga masa depan dan bisa delay mengikuti aturan bursa.</p>
     `;
   },
 
   rfView: function(data, ticker, confPercent, trend, trendColor, arrowClass, signalNote, profitProjectionHtml, esc) {
+    const fmt = (v, d = 2) => Number.isFinite(Number(v)) ? Number(v).toLocaleString('id-ID', { maximumFractionDigits: d }) : 'N/A';
+    const metrics = data.metrics || {};
+    const forecast = Array.isArray(data.forecast) ? data.forecast.slice(0, 5) : [];
+    const metricColor = Number(metrics.sim_profit || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+    const forecastRows = forecast.map(f => `<tr><td>${esc(f.date || 'N/A')}</td><td><b>${fmt(f.price)}</b></td><td>${fmt(f.expected_return_pct)}%</td><td style="color:var(--dim)">${fmt(f.lower)} - ${fmt(f.upper)}</td></tr>`).join('');
+    const action = data.action || {};
+    const priceText = data.current_price ? `${fmt(data.current_price)} ${esc(data.currency || '')}` : 'N/A';
     return `
-      <p class="xgb-desc">Berikut adalah hasil analisis klasifikasi dari model <b>RANDOM FOREST</b> untuk saham <b>${esc(ticker)}</b>.</p>
+      <p class="xgb-desc">Berikut adalah hasil analisis klasifikasi realtime dari model <b>RANDOM FOREST</b> untuk saham <b>${esc(data.symbol || ticker)}</b>.</p>
       <div class="xgb-card">
-        <p class="xgb-title">Sinyal Tren Random Forest (Optimized ONNX)</p>
-        
+        <p class="xgb-title">Sinyal Tren Random Forest ONNX + Data Realtime</p>
         <div class="rf-trend-box" style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px; padding: 10px 0;">
           <div class="rf-arrow-graphic ${arrowClass}"></div>
-          <div class="rf-info">
-            <span class="rf-label" style="font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); display: block;">PROYEKSI TREN</span>
-            <h3 class="rf-trend-text" style="color: ${trendColor}; font-size: 26px; font-weight: 800; margin: 2px 0;">${esc(trend)}</h3>
-          </div>
+          <div class="rf-info"><span class="rf-label">PROYEKSI TREN</span><h3 class="rf-trend-text" style="color: ${trendColor}; font-size: 26px; font-weight: 800; margin: 2px 0;">${esc(trend)}</h3></div>
         </div>
-
         <div class="xgb-box">
-          <div class="xgb-flex">
-              <span class="xgb-label">Tingkat Keyakinan (Confidence)</span>
-              <b class="xgb-val">${confPercent}%</b>
-          </div>
-          <div class="xgb-bar-bg">
-              <div class="xgb-bar-fill" style="width: ${confPercent}%; background: ${trendColor};"></div>
-          </div>
+          <div class="xgb-flex"><span class="xgb-label">Harga terbaru Yahoo Finance</span><b class="xgb-val">${priceText}</b></div>
+          <div class="xgb-flex"><span class="xgb-label">Target 5 hari</span><b class="xgb-val">${fmt(data.target_5d)} ${esc(data.currency || '')}</b></div>
+          <div class="xgb-flex"><span class="xgb-label">Estimasi return 5 hari</span><b class="xgb-val">${fmt(data.expected_return_5d_pct)}%</b></div>
+          <div class="xgb-flex"><span class="xgb-label">Keputusan model</span><b class="xgb-val">${esc(action.verdict || 'TUNGGU')}</b></div>
+          <p class="compare-note">${esc(action.note || data.realtime_note || 'Data diperbarui saat request.')}</p>
+        </div>
+        <div class="xgb-box">
+          <div class="xgb-flex"><span class="xgb-label">Tingkat Keyakinan (Confidence)</span><b class="xgb-val">${confPercent}%</b></div>
+          <div class="xgb-bar-bg"><div class="xgb-bar-fill" style="width: ${confPercent}%; background: ${trendColor};"></div></div>
           ${signalNote}
           ${profitProjectionHtml}
-          <div class="xgb-footer-note">
-              <span style="color:var(--muted); font-size: 12px;">Rentang Waktu Prediksi:</span>
-              <b style="color:var(--text); font-size: 12px;">1 - 5 Hari ke Depan (Minggu Ini)</b>
-          </div>
+          <div class="xgb-footer-note"><span style="color:var(--muted); font-size: 12px;">Rentang Waktu Prediksi:</span><b style="color:var(--text); font-size: 12px;">1 - 5 Hari Trading ke Depan</b></div>
         </div>
-
         <div class="xgb-box">
-          <p class="xgb-title" style="margin-bottom: 12px;">🌳 Performa Real-World Testing Model</p>
+          <p class="xgb-title" style="margin-bottom: 12px;">📈 Proyeksi Harga Realtime</p>
+          <div class="table-wrap"><table class="stock-table"><thead><tr><th>Tanggal</th><th>Target</th><th>Return</th><th>Rentang</th></tr></thead><tbody>${forecastRows || `<tr><td colspan="4">Forecast tidak tersedia</td></tr>`}</tbody></table></div>
+        </div>
+        <div class="xgb-box">
+          <p class="xgb-title" style="margin-bottom: 12px;">🌳 Backtest Model Bawaan</p>
           <div class="xgb-metrics-grid">
-            <div class="xgb-metric"><small>Accuracy</small><br><b>68.70%</b></div>
-            <div class="xgb-metric" style="border-color: var(--green); background: rgba(98,196,130,0.05);"><small>Precision (Keamanan)</small><br><b style="color:var(--green);">66.67%</b></div>
-            <div class="xgb-metric" style="border-color: var(--green); background: rgba(98,196,130,0.05);"><small>Sim. Profit</small><br><b style="color:var(--green);">+2.16%</b></div>
-            <div class="xgb-metric"><small>F1 Score</small><br><b>0.0526</b></div>
+            <div class="xgb-metric"><small>Accuracy</small><br><b>${fmt(metrics.accuracy)}%</b></div>
+            <div class="xgb-metric" style="border-color: var(--green); background: rgba(98,196,130,0.05);"><small>Precision (Keamanan)</small><br><b style="color:var(--green);">${fmt(metrics.precision)}%</b></div>
+            <div class="xgb-metric"><small>Sim. Profit</small><br><b style="color:${metricColor};">${Number(metrics.sim_profit || 0) >= 0 ? '+' : ''}${fmt(metrics.sim_profit)}%</b></div>
+            <div class="xgb-metric"><small>F1 Score</small><br><b>${fmt(metrics.f1_score, 4)}</b></div>
           </div>
-          <p style="color:var(--dim); font-size: 11.5px; margin-top: 14px; line-height: 1.5;">
-              Berdasarkan simulasi trading, <b>Random Forest adalah model paling aman (Precision tertinggi)</b> dan berhasil menghasilkan keuntungan positif di saat model lain mencatatkan minus.
-          </p>
+          <p style="color:var(--dim); font-size: 11.5px; margin-top: 14px; line-height: 1.5;">${esc(metrics.profile_note || 'Random Forest dipakai sebagai filter risiko berbasis fitur teknikal realtime.')}</p>
+          <p style="color:var(--dim); font-size: 11px; margin-top: 8px;">Fetched: ${esc(data.fetched_at || 'N/A')}</p>
         </div>
       </div>
     `;
+  },
+
+  ensembleView: function(data, ticker, esc, fmtNum) {
+    const forecast = Array.isArray(data.forecast) ? data.forecast.slice(0, 5) : [];
+    const rows = forecast.map(f => `<tr><td>${esc(f.date || 'N/A')}</td><td><b>${fmtNum(f.price)}</b></td><td>${fmtNum(f.expected_return_pct)}%</td><td style="color:var(--dim)">${fmtNum(f.lower)} - ${fmtNum(f.upper)}</td></tr>`).join('');
+    const action = data.action || {};
+    const comps = data.components || {};
+    const classifiers = Array.isArray(comps.classifiers) ? comps.classifiers : [];
+    const compRows = classifiers.map(c => c.error ? `<li>${esc(c.key)} gagal: ${esc(c.error)}</li>` : `<li>${esc(c.key)}: ${esc(c.trend)} · confidence ${fmtNum(c.confidence_percent)}% · return 5 hari ${fmtNum(c.expected_return_5d_pct)}%</li>`).join('');
+    const isGood = String(action.verdict || '').includes('BELI');
+    const cls = isGood ? 'profit' : String(action.verdict || '').includes('HINDARI') ? 'loss' : 'warn';
+    return `
+      <p class="xgb-desc">Model <b>Realtime Hybrid</b> menggabungkan Prophet/fallback trend, XGBoost, Random Forest, dan harga terbaru Yahoo Finance untuk saham <b>${esc(data.symbol || ticker)}</b>.</p>
+      <div class="xgb-card">
+        <p class="xgb-title">Keputusan Gabungan Realtime</p>
+        <h2 class="xgb-trend" style="color:${isGood ? 'var(--green)' : cls === 'loss' ? 'var(--red)' : 'var(--yellow)'};">${esc(action.verdict || 'TUNGGU')}</h2>
+        <div class="xgb-proj ${cls}"><b>${esc(data.trend || 'NETRAL')} · Confidence ${fmtNum(data.confidence_percent)}%</b><p>${esc(action.note || data.realtime_note || 'Data diperbarui saat request.')}</p></div>
+        <div class="xgb-box">
+          <div class="xgb-flex"><span class="xgb-label">Harga terbaru</span><b class="xgb-val">${fmtNum(data.current_price)} ${esc(data.currency || '')}</b></div>
+          <div class="xgb-flex"><span class="xgb-label">Target 5 hari</span><b class="xgb-val">${fmtNum(data.target_5d)} ${esc(data.currency || '')}</b></div>
+          <div class="xgb-flex"><span class="xgb-label">Estimasi return 5 hari</span><b class="xgb-val">${fmtNum(data.expected_return_5d_pct)}%</b></div>
+          <div class="xgb-flex"><span class="xgb-label">Risk level</span><b class="xgb-val">${esc(action.risk_level || 'N/A')}</b></div>
+        </div>
+        <div class="xgb-box"><p class="xgb-title">📈 Proyeksi Harga 1-5 Hari</p><div class="table-wrap"><table class="stock-table"><thead><tr><th>Tanggal</th><th>Target</th><th>Return</th><th>Rentang</th></tr></thead><tbody>${rows || `<tr><td colspan="4">Forecast tidak tersedia</td></tr>`}</tbody></table></div></div>
+        <div class="xgb-box"><p class="xgb-title">Komponen Model</p><ul style="color:var(--muted); font-size:12px; padding-left:18px; text-align:left;"><li>Prophet/fallback: return 5 hari ${fmtNum(comps.prophet?.expected_return_5d_pct)}%</li>${compRows}</ul><p class="compare-note">Fetched: ${esc(data.fetched_at || 'N/A')}</p></div>
+      </div>
+    `;
   }
+
 };

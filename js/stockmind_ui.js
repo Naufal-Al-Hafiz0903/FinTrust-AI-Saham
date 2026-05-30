@@ -587,8 +587,8 @@ async function runComparison(tickers) {
   const label = market === 'crypto' ? 'Cryptocurrency' : (market === 'global' ? 'Saham Luar Negeri' : 'Saham Indonesia');
   renderComparison(`Perbandingan ${label}`, `Membandingkan ${items.map(x => x.ticker).join(', ')} pada tipe saham yang sama.`, items, d.errors || []);
 }
-// PROPHET, XGBOOST, RANDOM FOREST
-let predictionData = { prophet: null, xgboost: null, randomforest: null };
+// PROPHET, XGBOOST, RANDOM FOREST, REALTIME HYBRID
+let predictionData = { prophet: null, xgboost: null, randomforest: null, ensemble: null };
 
 window.renderPredictionView = function(model, ticker) {
   const card = document.getElementById('predictionCard');
@@ -667,12 +667,14 @@ window.renderPredictionView = function(model, ticker) {
     if (!Array.isArray(forecast) || forecast.length === 0) {
       card.innerHTML = TemplateUI.rawJsonView(data);
     } else {
-      const slicedForecast = forecast.slice(0, 7);
-      card.innerHTML = TemplateUI.prophetView(slicedForecast, ticker, esc, fmtNum);
+      const slicedForecast = forecast.slice(0, 5);
+      card.innerHTML = TemplateUI.prophetView(slicedForecast, ticker, esc, fmtNum, data);
     }
+  } else if (model === 'ensemble') {
+    card.innerHTML = TemplateUI.ensembleView(data, ticker, esc, fmtNum);
   }
 
-  ['btn-prophet', 'btn-xgboost', 'btn-randomforest'].forEach(id => {
+  ['btn-prophet', 'btn-xgboost', 'btn-randomforest', 'btn-ensemble'].forEach(id => {
     const btn = document.getElementById(id);
     if(btn) btn.classList.remove('on');
   });
@@ -692,19 +694,22 @@ async function runPredictions(ticker) {
     elMount.parentNode.insertBefore(predContainer, elMount);
 
     //Data cache
-    predictionData = { prophet: null, xgboost: null, randomforest: null };
+    predictionData = { prophet: null, xgboost: null, randomforest: null, ensemble: null };
 
-    const [pRes, xRes, rfRes] = await Promise.allSettled([
-      fetch(`${API_BASE}/api/predict/${encodeURIComponent(ticker)}?market=${market}`).then(r => r.json()),
-      fetch(`${API_BASE}/api/predict/xgboost/${encodeURIComponent(ticker)}?market=${market}`).then(r => r.json()),
-      fetch(`${API_BASE}/api/predict/randomforest/${encodeURIComponent(ticker)}?market=${market}`).then(r => r.json())
+    const stamp = Date.now();
+    const [pRes, xRes, rfRes, eRes] = await Promise.allSettled([
+      fetch(`${API_BASE}/api/predict/${encodeURIComponent(ticker)}?market=${market}&days=5&_=${stamp}`).then(r => r.json()),
+      fetch(`${API_BASE}/api/predict/xgboost/${encodeURIComponent(ticker)}?market=${market}&_=${stamp}`).then(r => r.json()),
+      fetch(`${API_BASE}/api/predict/randomforest/${encodeURIComponent(ticker)}?market=${market}&_=${stamp}`).then(r => r.json()),
+      fetch(`${API_BASE}/api/predict/ensemble/${encodeURIComponent(ticker)}?market=${market}&_=${stamp}`).then(r => r.json())
     ]);
 
     predictionData.prophet = pRes.status === 'fulfilled' ? pRes.value : { error: "Gagal mengambil data dari Prophet." };
     predictionData.xgboost = xRes.status === 'fulfilled' ? xRes.value : { error: "Gagal mengambil data dari XGBoost." };
     predictionData.randomforest = rfRes.status === 'fulfilled' ? rfRes.value : { error: "Gagal mengambil data dari Random Forest." };
+    predictionData.ensemble = eRes.status === 'fulfilled' ? eRes.value : { error: "Gagal mengambil data dari Realtime Hybrid." };
 
-    window.renderPredictionView('xgboost', ticker);
+    window.renderPredictionView('ensemble', ticker);
 
   } catch (e) {
     console.warn("Prediksi Multimodel gagal:", e);

@@ -1,108 +1,60 @@
-import sys
-import json
-import warnings
 import os
-import yfinance as yf
-import pandas as pd
-import numpy as np
-import ta  
+import sys
+import warnings
+
 import onnxruntime as rt
 
-warnings.filterwarnings('ignore')
+from stock_realtime import (
+    build_model_response,
+    download_history,
+    extract_probability,
+    get_quote_snapshot,
+    latest_feature_matrix,
+    print_error,
+    print_json,
+)
+
+warnings.filterwarnings("ignore")
+
 
 def predict_randomforest(ticker):
     try:
-        # Download Data Mentah
-        df = yf.download(ticker, period='1y', progress=False)
-        
-        if df.empty:
-            print(json.dumps({"error": f"Data historis untuk {ticker} tidak ditemukan"}))
-            return
-            
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-
-        # Feature Engineering Dasar
-        df['Ret_Close'] = df['Close'].pct_change()
-        df['Ret_Open'] = df['Open'].pct_change()
-        df['Ret_High'] = df['High'].pct_change()
-        
-        df['Volatility_5'] = df['Ret_Close'].rolling(5).std()
-        df['Momentum_5'] = df['Close'] / df['Close'].shift(5) - 1
-        df['Vol_Change'] = df['Volume'].pct_change()
-
-        # Indikator Teknikal
-        df['RSI_14'] = ta.momentum.RSIIndicator(close=df['Close'], window=14).rsi()
-        macd = ta.trend.MACD(close=df['Close'], window_slow=26, window_fast=12, window_sign=9)
-        df['MACD_12_26_9'] = macd.macd()
-
-        sma_20 = ta.trend.sma_indicator(close=df['Close'], window=20)
-        ema_50 = ta.trend.ema_indicator(close=df['Close'], window=50)
-        
-        df['SMA20_Dist'] = (df['Close'] - sma_20) / sma_20
-        df['EMA50_Dist'] = (df['Close'] - ema_50) / ema_50
-
-        # Lag Features
-        df['Ret_Close_Lag1'] = df['Ret_Close'].shift(1)
-        df['RSI_Lag1'] = df['RSI_14'].shift(1)
-
-        # logic shift(1)
-        base_features_opt = [
-            "Ret_Close", "Ret_Open", "Ret_High", "Volatility_5", "Momentum_5",
-            "Vol_Change", "RSI_14", "MACD_12_26_9", "SMA20_Dist", "EMA50_Dist"
-        ]
-        for col in base_features_opt:
-            df[col] = df[col].shift(1)
-
-        df = df.dropna()
-        if df.empty:
-            print(json.dumps({"error": "Data tidak cukup setelah kalkulasi indikator."}))
-            return
-
-        latest_data = df.iloc[-1:]
-
-        features = [
-            "Ret_Close", "Ret_Open", "Ret_High", "Volatility_5", "Momentum_5",
-            "Vol_Change", "RSI_14", "MACD_12_26_9", "SMA20_Dist", "EMA50_Dist",
-            "Ret_Close_Lag1", "RSI_Lag1"
-        ]
-
-        X_predict = latest_data[features].astype(np.float32).values
+        used_symbol, df = download_history(ticker, period="3y", min_rows=90)
+        quote = get_quote_snapshot(used_symbol, df)
+        x_predict, feature_snapshot = latest_feature_matrix(df)
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(base_dir, "model", "rf_model_optimized.onnx")
-        
-        sess = rt.InferenceSession(model_path)
-        input_name = sess.get_inputs()[0].name
-        label_name = sess.get_outputs()[0].name
-        prob_name = sess.get_outputs()[1].name
+        if not os.path.exists(model_path):
+            raise RuntimeError(f"File model tidak ditemukan: {model_path}")
 
-        pred_onx = sess.run([label_name, prob_name], {input_name: X_predict})
+        sess = rt.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+        input_name = sess.get_inputs()[0].name
+        output_names = [o.name for o in sess.get_outputs()]
+        pred_onx = sess.run(output_names, {input_name: x_predict})
 
         predicted_class = int(pred_onx[0][0])
-        probabilities_dict = pred_onx[1][0] 
+        confidence, probabilities = extract_probability(pred_onx[1], predicted_class)
 
-        if isinstance(probabilities_dict, dict):
-            confidence = float(probabilities_dict.get(predicted_class, probabilities_dict.get(float(predicted_class), 0.0)))
-        else:
-            confidence = float(probabilities_dict[predicted_class]) if predicted_class < len(probabilities_dict) else 0.0
-
-        trend_label = "BULLISH (Naik)" if predicted_class == 1 else "BEARISH (Turun)"
-
-        print(json.dumps({
-            "ticker": ticker, 
-            "model": "Random Forest (ONNX)",
-            "trend": trend_label,
-            "class": predicted_class,
-            "confidence": confidence
-        }))
-        
+        payload = build_model_response(
+            ticker=ticker,
+            used_symbol=used_symbol,
+            model_name="Random Forest (ONNX Realtime)",
+            model_key="randomforest",
+            predicted_class=predicted_class,
+            confidence=confidence,
+            probabilities=probabilities,
+            quote=quote,
+            df=df,
+            feature_snapshot=feature_snapshot,
+        )
+        print_json(payload)
     except Exception as e:
-        print(json.dumps({"error": f"Internal Script Error: {str(e)}"}))
+        print_error(f"Internal Script Error: {str(e)}")
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        ticker = sys.argv[1]
-        predict_randomforest(ticker)
+        predict_randomforest(sys.argv[1])
     else:
-        print(json.dumps({"error": "Ticker tidak diberikan"}))
+        print_error("Ticker tidak diberikan")

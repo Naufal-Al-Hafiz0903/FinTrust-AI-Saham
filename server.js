@@ -3,9 +3,17 @@ import cors from "cors";
 import Groq from "groq-sdk";
 import YahooFinance from "yahoo-finance2";
 import dotenv from "dotenv";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { exec } from "child_process";
+import { execFile } from "child_process";
+
+/*
+  FinTrust AI Saham server
+  - Realtime/near-realtime market data from Yahoo Finance.
+  - Python prediction scripts are executed with local .venv automatically when available.
+  - Stock lookup is defensive: invalid/unavailable tickers return a clear JSON error instead of crashing.
+*/
 
 dotenv.config();
 
@@ -39,18 +47,43 @@ function cleanTicker(ticker = "") {
   return String(ticker).trim().toUpperCase().replace(/\s+/g, "");
 }
 
-function resolveSymbol(ticker = "", market = "idx") {
-  const raw = cleanTicker(ticker).replace(/[^A-Z0-9.\-^=]/g, "");
-  if (!raw) throw new Error("Ticker kosong");
-  if (market === "idx") return `${raw.replace(".JK", "")}.JK`;
-  if (market === "ipo") return raw.replace(".JK", "");
-  if (market === "crypto") {
-    return raw.includes("-") ? raw : `${raw}-USD`;
-  }
-  return raw.replace(".JK", "");
+function sanitizeTicker(ticker = "") {
+  return cleanTicker(ticker).replace(/[^A-Z0-9.\-^=]/g, "");
 }
 
-function inferMarketFromSymbol(symbol = "", requestedMarket = "idx") {
+function unique(values = []) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function resolveSymbol(ticker = "", market = "auto") {
+  const raw = sanitizeTicker(ticker);
+  if (!raw) throw new Error("Ticker kosong");
+
+  if (market === "idx") return `${raw.replace(/\.JK$/i, "")}.JK`;
+  if (market === "ipo") return raw.replace(/\.JK$/i, "");
+  if (market === "crypto") return raw.includes("-") ? raw : `${raw}-USD`;
+  if (market === "global") return raw.replace(/\.JK$/i, "");
+
+  // Auto mode: keep the user symbol. Python prediction layer and Node quote lookup
+  // will try sensible fallbacks such as .JK when the first symbol is unavailable.
+  return raw;
+}
+
+function stockCandidates(ticker = "", market = "auto") {
+  const raw = sanitizeTicker(ticker);
+  if (!raw) throw new Error("Ticker kosong");
+  const noJk = raw.replace(/\.JK$/i, "");
+
+  if (market === "idx") return unique([`${noJk}.JK`, noJk]);
+  if (market === "global") return unique([noJk, `${noJk}.JK`]);
+  if (market === "crypto") return unique([raw.includes("-") ? raw : `${raw}-USD`, raw]);
+  if (market === "ipo") return unique([noJk]);
+
+  const hasMarketMarker = /[.\-^=]/.test(raw);
+  return unique(hasMarketMarker ? [raw] : [raw, `${raw}.JK`]);
+}
+
+function inferMarketFromSymbol(symbol = "", requestedMarket = "auto") {
   if (requestedMarket === "global") return "global";
   if (requestedMarket === "ipo") return "ipo";
   if (requestedMarket === "crypto") return "crypto";
@@ -78,68 +111,102 @@ async function cached(key, fn) {
   return data;
 }
 
+async function readQuote(symbol) {
+  let q;
+  try {
+    q = await yf.quote(symbol);
+  } catch (err) {
+    throw new Error(`Yahoo Finance gagal membaca ${symbol}: ${err?.message || err}`);
+  }
+
+  if (!q || typeof q !== "object") {
+    throw new Error(`Yahoo Finance tidak mengembalikan data untuk ${symbol}`);
+  }
+
+  const price = safeNumber(
+    q.regularMarketPrice ??
+    q.postMarketPrice ??
+    q.preMarketPrice ??
+    q.regularMarketPreviousClose ??
+    q.previousClose
+  );
+
+  if (!price || price <= 0) {
+    throw new Error(`Harga ${symbol} tidak tersedia dari Yahoo Finance`);
+  }
+
+  return { q, price };
+}
+
 async function getUsdIdrRate() {
   return cached("fx:USDIDR", async () => {
     const symbols = ["IDR=X", "USDIDR=X"];
-    let lastError = null;
+    const errors = [];
 
     for (const symbol of symbols) {
       try {
-        const q = await yf.quote(symbol);
-        const rate = safeNumber(q.regularMarketPrice ?? q.regularMarketPreviousClose);
-        if (rate && rate > 0) {
-          return {
-            USDIDR: rate,
-            rate,
-            pair: "USD/IDR",
-            symbol,
-            formatted: formatMoney(rate, "IDR"),
-            source: "Yahoo Finance",
-            fetchedAt: new Date().toISOString()
-          };
-        }
+        const { q, price } = await readQuote(symbol);
+        return {
+          USDIDR: price,
+          rate: price,
+          pair: "USD/IDR",
+          symbol,
+          formatted: formatMoney(price, "IDR"),
+          source: "Yahoo Finance",
+          fetchedAt: new Date().toISOString(),
+          rawPreviousClose: q.regularMarketPreviousClose ?? q.previousClose ?? null,
+        };
       } catch (err) {
-        lastError = err;
+        errors.push(err.message);
       }
     }
 
-    throw new Error(lastError?.message || "Kurs USD/IDR realtime tidak tersedia");
+    throw new Error(`Kurs USD/IDR realtime tidak tersedia. ${errors.join(" | ")}`);
   });
 }
 
-async function getStockData(ticker, market = "idx") {
-  const symbol = resolveSymbol(ticker, market);
-  const key = `stock:${market}:${symbol}`;
+async function getStockData(ticker, market = "auto") {
+  const candidates = stockCandidates(ticker, market);
+  const key = `stock:${market}:${candidates.join(",")}`;
 
   return cached(key, async () => {
-    const q = await yf.quote(symbol);
-    const price = safeNumber(q.regularMarketPrice ?? q.regularMarketPreviousClose);
-    if (!price || price <= 0) throw new Error(`Harga ${symbol} tidak tersedia`);
+    const errors = [];
 
-    const currency = q.currency || (symbol.endsWith(".JK") ? "IDR" : "USD");
-    const resolvedMarket = inferMarketFromSymbol(symbol, market);
+    for (const symbol of candidates) {
+      try {
+        const { q, price } = await readQuote(symbol);
+        const currency = q.currency || (symbol.endsWith(".JK") ? "IDR" : "USD");
+        const resolvedMarket = inferMarketFromSymbol(symbol, market);
 
-    return {
-      ticker: symbol.replace(".JK", ""),
-      symbol,
-      market: resolvedMarket,
-      name: q.longName || q.shortName || symbol,
-      price,
-      formattedPrice: formatMoney(price, currency),
-      previousClose: q.regularMarketPreviousClose ?? null,
-      open: q.regularMarketOpen ?? null,
-      high: q.regularMarketDayHigh ?? null,
-      low: q.regularMarketDayLow ?? null,
-      volume: q.regularMarketVolume ?? null,
-      marketCap: q.marketCap ?? null,
-      change: q.regularMarketChange ?? null,
-      changePercent: q.regularMarketChangePercent ?? null,
-      fiftyTwoWeekHigh: q.fiftyTwoWeekHigh ?? null,
-      fiftyTwoWeekLow: q.fiftyTwoWeekLow ?? null,
-      currency,
-      exchange: q.fullExchangeName || q.exchange || (resolvedMarket === "idx" ? "IDX" : (resolvedMarket === "crypto" ? "Crypto Market" : "Global")),
-      source: "Yahoo Finance"
-    };
+        return {
+          ticker: symbol.replace(".JK", ""),
+          symbol,
+          market: resolvedMarket,
+          name: q.longName || q.shortName || q.displayName || symbol,
+          price,
+          formattedPrice: formatMoney(price, currency),
+          previousClose: q.regularMarketPreviousClose ?? q.previousClose ?? null,
+          open: q.regularMarketOpen ?? null,
+          high: q.regularMarketDayHigh ?? null,
+          low: q.regularMarketDayLow ?? null,
+          volume: q.regularMarketVolume ?? null,
+          marketCap: q.marketCap ?? null,
+          change: q.regularMarketChange ?? null,
+          changePercent: q.regularMarketChangePercent ?? null,
+          fiftyTwoWeekHigh: q.fiftyTwoWeekHigh ?? null,
+          fiftyTwoWeekLow: q.fiftyTwoWeekLow ?? null,
+          currency,
+          exchange: q.fullExchangeName || q.exchange || (resolvedMarket === "idx" ? "IDX" : (resolvedMarket === "crypto" ? "Crypto Market" : "Global")),
+          source: "Yahoo Finance",
+          fetchedAt: new Date().toISOString(),
+          realtimeNote: "Harga diambil saat request dari Yahoo Finance; bisa delay mengikuti aturan bursa.",
+        };
+      } catch (err) {
+        errors.push(`${symbol}: ${err.message}`);
+      }
+    }
+
+    throw new Error(`Data harga untuk ${ticker} tidak tersedia. Dicoba: ${candidates.join(", ")}. Detail: ${errors.join(" | ")}`);
   });
 }
 
@@ -163,6 +230,22 @@ app.get("/api/health", (req, res) => {
     groqReady: Boolean(client),
     keyStatus: client ? "valid format" : "belum diisi",
     marketData: "Yahoo Finance",
+    python: pythonCommand(),
+  });
+});
+
+app.get("/api/diagnostics", (req, res) => {
+  const py = pythonCommand();
+  const code = "import sys, json; mods=['numpy','pandas','yfinance','onnxruntime']; out={'python':sys.executable,'ok':True,'missing':[]};\nfor m in mods:\n    try: __import__(m)\n    except Exception as e: out['missing'].append(m); out['ok']=False\nprint(json.dumps(out))";
+  execFile(py, ["-c", code], { cwd: __dirname, timeout: 30_000 }, (error, stdout, stderr) => {
+    if (error) {
+      return res.status(500).json({ ok: false, python: py, error: stderr || error.message, install: "Jalankan setup_windows.bat atau py -3 -m pip install -r requirements.txt" });
+    }
+    try {
+      res.json(JSON.parse(String(stdout || "{}")));
+    } catch (e) {
+      res.status(500).json({ ok: false, python: py, error: "Output diagnostics tidak valid", stdout, stderr });
+    }
   });
 });
 
@@ -177,7 +260,7 @@ app.get("/api/fx/usdidr", async (req, res) => {
 
 app.get("/api/stock/:ticker", async (req, res) => {
   try {
-    const market = req.query.market || "idx";
+    const market = req.query.market || "auto";
     const stock = await getStockData(req.params.ticker, market);
     const fx = await getUsdIdrRate().catch(() => null);
     res.json({ stock, fx });
@@ -187,10 +270,9 @@ app.get("/api/stock/:ticker", async (req, res) => {
   }
 });
 
-
 app.post("/api/stocks", async (req, res) => {
   try {
-    const market = req.body.market || "idx";
+    const market = req.body.market || "auto";
     const tickers = Array.isArray(req.body.tickers) ? req.body.tickers : [];
     const clean = [...new Set(tickers.map(cleanTicker).filter(Boolean))].slice(0, 120);
     if (!clean.length) throw new Error("Ticker pembanding belum diisi");
@@ -224,7 +306,7 @@ app.post("/api/analyze", async (req, res) => {
 
     let stock = null;
     let fx = null;
-    const activeMarket = market || mode || "idx";
+    const activeMarket = market || mode || "auto";
 
     if (ticker && activeMarket !== "ipo") {
       try {
@@ -275,55 +357,91 @@ ${prompt}
   }
 });
 
-//PROPHET
-app.get("/api/predict/:ticker", (req, res) => {
-  const market = req.query.market || "idx";
-  const ticker = resolveSymbol(req.params.ticker, market);
-  
-  exec(`python predict.py ${ticker}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error("Prophet Error:", stderr);
-      return res.status(500).json({ error: "Gagal menjalankan prediksi AI." });
-    }
-    try {
-      const result = JSON.parse(stdout);
-      res.json(result);
-    } catch (e) {
-      console.error("Prophet Parse Error:", e, stdout);
-      res.status(500).json({ error: "Gagal memproses hasil prediksi Prophet." });
-    }
-  });
-});
-// MULTI-MODEL PREDICTIONS (XGBoost, Random Forest, dll)
-app.get("/api/predict/:model/:ticker", (req, res) => {
-  const { model, ticker: rawTicker } = req.params;
-  const market = req.query.market || "idx";
-  const ticker = resolveSymbol(rawTicker, market);
-  
-  const scripts = {
-    "xgboost": "predict_xgb.py",
-    "randomforest": "predict_rf.py"
-  };
+function pythonCommand() {
+  if (process.env.PYTHON && fs.existsSync(process.env.PYTHON)) return process.env.PYTHON;
 
-  const targetScript = scripts[model.toLowerCase()];
+  const venvPython = process.platform === "win32"
+    ? path.join(__dirname, ".venv", "Scripts", "python.exe")
+    : path.join(__dirname, ".venv", "bin", "python");
+  if (fs.existsSync(venvPython)) return venvPython;
 
-  if (!targetScript) {
-    return res.status(400).json({ error: `Model '${model}' belum didukung.` });
+  return process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
+}
+
+function dependencyHint(stderr = "") {
+  const text = String(stderr || "");
+  if (text.includes("ModuleNotFoundError") || text.includes("No module named")) {
+    return " Dependency Python belum terinstall. Stop server dengan Ctrl+C, jalankan setup_windows.bat, lalu start_windows.bat.";
   }
+  return "";
+}
 
-  exec(`python ${targetScript} ${ticker}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`[${model.toUpperCase()}] Error:`, stderr);
-      return res.status(500).json({ error: `Gagal menjalankan prediksi model ${model}.` });
+function runPythonPrediction(script, args = [], label = "PYTHON", res) {
+  const scriptPath = path.join(__dirname, script);
+  execFile(
+    pythonCommand(),
+    [scriptPath, ...args.map(String)],
+    { cwd: __dirname, timeout: 120_000, maxBuffer: 1024 * 1024 * 8 },
+    (error, stdout, stderr) => {
+      if (error) {
+        const msg = String(stderr || error.message || "").trim();
+        console.error(`[${label}] Error:`, msg);
+        return res.status(500).json({
+          error: `Gagal menjalankan prediksi ${label}.${dependencyHint(msg)} ${msg}`.trim(),
+          python: pythonCommand(),
+        });
+      }
+      try {
+        const text = String(stdout || "").trim();
+        const jsonStart = text.indexOf("{");
+        const cleanText = jsonStart >= 0 ? text.slice(jsonStart) : text;
+        const result = JSON.parse(cleanText);
+        const status = result?.error ? 500 : 200;
+        res.status(status).json(result);
+      } catch (e) {
+        console.error(`[${label}] Parse Error:`, e, stdout, stderr);
+        res.status(500).json({ error: `Gagal memproses hasil prediksi ${label}.`, stdout, stderr });
+      }
     }
-    try {
-      const result = JSON.parse(stdout);
-      res.json(result);
-    } catch (e) {
-      console.error(`[${model.toUpperCase()}] Parse Error:`, e, stdout);
-      res.status(500).json({ error: `Gagal memproses hasil prediksi dari model ${model}.` });
+  );
+}
+
+// PROPHET / PRICE FORECAST 1-5 HARI TRADING
+app.get("/api/predict/:ticker", (req, res) => {
+  try {
+    const market = req.query.market || "auto";
+    const ticker = resolveSymbol(req.params.ticker, market);
+    const days = Math.min(Math.max(Number(req.query.days || 5), 1), 10);
+    runPythonPrediction("predict.py", [ticker, days], "PROPHET", res);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// MULTI-MODEL PREDICTIONS (XGBoost, Random Forest, Hybrid Ensemble)
+app.get("/api/predict/:model/:ticker", (req, res) => {
+  try {
+    const { model, ticker: rawTicker } = req.params;
+    const market = req.query.market || "auto";
+    const ticker = resolveSymbol(rawTicker, market);
+
+    const scripts = {
+      "xgboost": "predict_xgb.py",
+      "randomforest": "predict_rf.py",
+      "rf": "predict_rf.py",
+      "ensemble": "predict_ensemble.py",
+      "hybrid": "predict_ensemble.py"
+    };
+
+    const targetScript = scripts[String(model).toLowerCase()];
+    if (!targetScript) {
+      return res.status(400).json({ error: `Model '${model}' belum didukung.` });
     }
-  });
+
+    runPythonPrediction(targetScript, [ticker], model.toUpperCase(), res);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
@@ -332,4 +450,5 @@ app.listen(PORT, () => {
   console.log(`AI provider: Groq`);
   console.log(`Model: ${process.env.GROQ_MODEL || "llama-3.3-70b-versatile"}`);
   console.log(`Groq key: ${client ? "loaded" : "not configured"}`);
+  console.log(`Python: ${pythonCommand()}`);
 });
